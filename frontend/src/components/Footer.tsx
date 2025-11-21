@@ -4,9 +4,9 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-8">
         <div className="grid md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-white text-lg font-semibold mb-4">Ticket Exchange</h3>
+            <h3 className="text-white text-lg font-semibold mb-4">TixPeer</h3>
             <p className="text-sm">
-              Your trusted marketplace for buying and selling event tickets.
+              A peer-to-peer marketplace connecting fans to buy, sell, and trade tickets directly—no middleman, just community.
             </p>
           </div>
 
@@ -70,7 +70,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-sm text-center">
-          <p>&copy; {new Date().getFullYear()} Ticket Exchange. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} TixPeer. All rights reserved.</p>
         </div>
       </div>
     </footer>
