@@ -14,8 +14,8 @@ export class TicketsService {
     const ticket = this.ticketsRepository.create({
       ...createTicketDto,
       sellerId,
-    });
-    return this.ticketsRepository.save(ticket);
+    } as any);
+    return this.ticketsRepository.save(ticket) as unknown as Promise<Ticket>;
   }
 
   async findAll(filters?: {
