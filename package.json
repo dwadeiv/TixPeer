@@ -1,8 +1,8 @@
 {
-  "name": "ticket-exchange",
+  "name": "tixpeer",
   "version": "1.0.0",
   "private": true,
-  "description": "Ticket Exchange Marketplace - Full Stack Application",
+  "description": "TixPeer Marketplace - Full Stack Application",
   "workspaces": [
     "frontend",
     "backend",

@@ -1,6 +1,6 @@
-# Ticket Exchange
+# TixPeer
 
-A full-stack ticket marketplace application for buying and selling event tickets. Built with Next.js, NestJS, and PostgreSQL.
+A peer-to-peer ticket exchange marketplace connecting fans directly. TixPeer provides the platform for users to buy, sell, and trade event tickets with each other—no middleman, no platform inventory, just community-driven exchange. Built with Next.js, NestJS, and PostgreSQL.
 
 ## Features
 

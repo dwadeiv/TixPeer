@@ -23,8 +23,8 @@ async function bootstrap() {
 
   // Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle('Ticket Exchange API')
-    .setDescription('API documentation for Ticket Exchange marketplace')
+    .setTitle('TixPeer API')
+    .setDescription('API documentation for TixPeer - A peer-to-peer ticket exchange marketplace')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

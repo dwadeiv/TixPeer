@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Ticket Exchange is a full-stack ticket marketplace application where users can buy and sell event tickets. The application features user authentication, ticket listings with search/filter capabilities, secure transactions, and user profile management.
+TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directly to buy, sell, and trade event tickets. Unlike traditional platforms, TixPeer doesn't hold inventory or act as a seller—it simply provides the marketplace space for users to list tickets and connect with each other. The application features user authentication, ticket listings with search/filter capabilities, peer-to-peer transaction facilitation, and user profile management.
 
 ## Technology Stack
 
