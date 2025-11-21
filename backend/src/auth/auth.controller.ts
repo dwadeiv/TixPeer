@@ -19,7 +19,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @ApiOperation({ summary: 'Login with email and password' })
-  async login(@Request() req) {
+  async login(@Request() req: any) {
     return this.authService.login(req.user);
   }
 }
