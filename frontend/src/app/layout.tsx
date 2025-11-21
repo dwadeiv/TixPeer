@@ -7,8 +7,8 @@ import Footer from '@/components/Footer';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Ticket Exchange',
-  description: 'Buy and sell tickets for events',
+  title: 'TixPeer',
+  description: 'Peer-to-peer ticket exchange marketplace - Connect directly with other fans to buy, sell, and trade event tickets',
 };
 
 export default function RootLayout({

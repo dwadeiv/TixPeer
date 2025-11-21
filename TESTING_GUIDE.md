@@ -2,7 +2,7 @@
 
 ## Quick Start Testing
 
-Follow these steps to test the Ticket Exchange application.
+Follow these steps to test the TixPeer application.
 
 ## Step 1: Install Dependencies
 
@@ -41,7 +41,7 @@ This starts both frontend and backend. You should see:
 
 ### ✅ Test 1: Frontend Homepage
 1. Open http://localhost:3000
-2. You should see "Welcome to Ticket Exchange" page
+2. You should see "Welcome to TixPeer" page
 3. Header with navigation links
 4. Three feature cards
 5. Footer with links
@@ -57,7 +57,7 @@ This starts both frontend and backend. You should see:
    - Email: `admin@ticket-exchange.local`
    - Password: `admin`
 3. Click "Add New Server"
-4. In "General" tab: Name it "Ticket Exchange"
+4. In "General" tab: Name it "TixPeer"
 5. In "Connection" tab:
    - Host: `postgres`
    - Port: `5432`
@@ -65,7 +65,7 @@ This starts both frontend and backend. You should see:
    - Username: `ticket_exchange`
    - Password: `dev_password_123`
 6. Click "Save"
-7. Navigate to: Servers > Ticket Exchange > Databases > ticket_exchange_db > Schemas > public > Tables
+7. Navigate to: Servers > TixPeer > Databases > ticket_exchange_db > Schemas > public > Tables
 8. You should see: `users`, `tickets`, `transactions` tables
 
 ## API Testing with Swagger
