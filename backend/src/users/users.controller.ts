@@ -22,7 +22,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile' })
-  getProfile(@Request() req) {
+  getProfile(@Request() req: any) {
     return this.usersService.findOne(req.user.id);
   }
 
@@ -30,7 +30,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update current user profile' })
-  updateProfile(@Request() req, @Body() updateData: Partial<any>) {
+  updateProfile(@Request() req: any, @Body() updateData: Partial<any>) {
     return this.usersService.update(req.user.id, updateData);
   }
 }

@@ -24,7 +24,7 @@ export class TicketsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new ticket listing' })
-  create(@Body() createTicketDto: any, @Request() req) {
+  create(@Body() createTicketDto: any, @Request() req: any) {
     return this.ticketsService.create(createTicketDto, req.user.id);
   }
 
@@ -45,7 +45,7 @@ export class TicketsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user tickets' })
-  findMyTickets(@Request() req) {
+  findMyTickets(@Request() req: any) {
     return this.ticketsService.findByUser(req.user.id);
   }
 
@@ -59,7 +59,7 @@ export class TicketsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update ticket' })
-  update(@Param('id') id: string, @Body() updateTicketDto: any, @Request() req) {
+  update(@Param('id') id: string, @Body() updateTicketDto: any, @Request() req: any) {
     return this.ticketsService.update(id, updateTicketDto, req.user.id);
   }
 
@@ -67,7 +67,7 @@ export class TicketsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete ticket' })
-  remove(@Param('id') id: string, @Request() req) {
+  remove(@Param('id') id: string, @Request() req: any) {
     return this.ticketsService.remove(id, req.user.id);
   }
 }

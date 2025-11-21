@@ -22,13 +22,13 @@ export class TransactionsController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new transaction (purchase ticket)' })
-  create(@Body() createTransactionDto: any, @Request() req) {
+  create(@Body() createTransactionDto: any, @Request() req: any) {
     return this.transactionsService.create(createTransactionDto, req.user.id);
   }
 
   @Get('my-transactions')
   @ApiOperation({ summary: 'Get current user transactions' })
-  findMyTransactions(@Request() req) {
+  findMyTransactions(@Request() req: any) {
     return this.transactionsService.findByUser(req.user.id);
   }
 
