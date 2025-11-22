@@ -31,6 +31,7 @@ export interface Event {
   date: string;
   venue: string;
   location: string;
+  city: string; // City name for filtering
   image: string;
   category: string;
   activeListings: number;
