@@ -1,13 +1,18 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Ticket, Search, Plus, User, MessageSquare, Home } from 'lucide-react';
+import { Ticket, Search, Plus, User, MessageSquare, Home, MapPin } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { LocationSelector } from './LocationSelector';
+import { useLocation } from '@/contexts/LocationContext';
 
 export default function Header() {
   const pathname = usePathname();
+  const { location, setLocation } = useLocation();
+  const [locationDialogOpen, setLocationDialogOpen] = useState(false);
 
   const isActive = (path: string) => {
     return pathname === path;
@@ -41,6 +46,27 @@ export default function Header() {
 
             {/* Actions */}
             <div className="flex items-center gap-3">
+              {/* Location Button/Display */}
+              {location ? (
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => setLocationDialogOpen(true)}
+                >
+                  <MapPin className="size-4" />
+                  <span className="hidden sm:inline">{location.name}</span>
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => setLocationDialogOpen(true)}
+                >
+                  <MapPin className="size-4" />
+                  <span className="hidden sm:inline">Set Location</span>
+                </Button>
+              )}
+
               <Link href="/create">
                 <Button className="gap-2">
                   <Plus className="size-4" />
@@ -56,6 +82,14 @@ export default function Header() {
           </div>
         </div>
       </header>
+
+      {/* Location Selector Dialog */}
+      <LocationSelector
+        open={locationDialogOpen}
+        onOpenChange={setLocationDialogOpen}
+        currentLocation={location}
+        onLocationSelect={setLocation}
+      />
 
       {/* Mobile Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50">
