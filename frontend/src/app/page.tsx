@@ -10,9 +10,16 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Calendar, MapPin, MessageSquare, Star, ArrowRight } from 'lucide-react';
 import { mockListings, mockEvents } from '@/utils/mockData';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
+import { useLocation } from '@/contexts/LocationContext';
 
 export default function Home() {
   const [filter, setFilter] = useState<'all' | 'offer' | 'request'>('all');
+  const { location } = useLocation();
+
+  // Filter events by selected location
+  const locationFilteredEvents = location
+    ? mockEvents.filter(event => event.city === location.name)
+    : mockEvents;
 
   const filteredListings = mockListings.filter(
     listing => filter === 'all' || listing.type === filter
@@ -45,11 +52,22 @@ export default function Home() {
       {/* Trending Events */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl">Trending Events</h2>
+          <h2 className="text-2xl">
+            {location ? `Events in ${location.name}` : 'Trending Events'}
+          </h2>
           <Button variant="ghost" size="sm">View All</Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {mockEvents.map(event => (
+        {locationFilteredEvents.length === 0 ? (
+          <Card className="p-12 text-center">
+            <MapPin className="size-12 mx-auto mb-4 text-slate-400" />
+            <p className="text-slate-600 mb-2">No events found in {location?.name}</p>
+            <p className="text-sm text-slate-500 mb-4">
+              Try selecting a different city or check back later for new events
+            </p>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {locationFilteredEvents.map(event => (
             <Link key={event.id} href={`/events/${event.id}`}>
               <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
                 <div className="aspect-video relative">
@@ -84,8 +102,9 @@ export default function Home() {
                 </div>
               </Card>
             </Link>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Listings Feed */}
