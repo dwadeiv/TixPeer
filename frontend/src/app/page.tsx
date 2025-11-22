@@ -22,17 +22,19 @@ export default function Home() {
   // Filter events by search query first
   let filteredEvents = mockEvents;
   if (searchQuery) {
-    filteredEvents = mockEvents.filter(event =>
+    filteredEvents = filteredEvents.filter(event =>
       event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.venue.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.category.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }
 
-  // Then filter by location if set
-  const locationFilteredEvents = location && !searchQuery
-    ? filteredEvents.filter(event => event.city === location.name)
-    : filteredEvents;
+  // Then filter by location if set (applies to both search and browsing)
+  if (location) {
+    filteredEvents = filteredEvents.filter(event => event.city === location.name);
+  }
+
+  const locationFilteredEvents = filteredEvents;
 
   const filteredListings = mockListings.filter(
     listing => filter === 'all' || listing.type === filter
@@ -66,7 +68,9 @@ export default function Home() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl">
-            {searchQuery
+            {searchQuery && location
+              ? `Search Results for "${searchQuery}" in ${location.name}`
+              : searchQuery
               ? `Search Results for "${searchQuery}"`
               : location
               ? `Events in ${location.name}`
@@ -83,9 +87,12 @@ export default function Home() {
             {searchQuery ? (
               <>
                 <SearchIcon className="size-12 mx-auto mb-4 text-slate-400" />
-                <p className="text-slate-600 mb-2">No events found for "{searchQuery}"</p>
+                <p className="text-slate-600 mb-2">
+                  No events found for "{searchQuery}"{location ? ` in ${location.name}` : ''}
+                </p>
                 <p className="text-sm text-slate-500 mb-4">
                   Try searching for an artist name, sports team, or event type
+                  {location && ' or change your location'}
                 </p>
                 <Link href="/">
                   <Button>View All Events</Button>
