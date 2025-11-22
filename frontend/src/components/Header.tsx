@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Ticket, Search, Plus, User, MessageSquare, Home, MapPin } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -11,11 +11,20 @@ import { useLocation } from '@/contexts/LocationContext';
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const { location, setLocation } = useLocation();
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const isActive = (path: string) => {
     return pathname === path;
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
   };
 
   return (
@@ -33,16 +42,18 @@ export default function Header() {
             </Link>
 
             {/* Search */}
-            <div className="hidden md:flex flex-1 max-w-md mx-8">
+            <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-8">
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-slate-400" />
                 <Input
                   type="search"
-                  placeholder="Search events, users, or listings..."
+                  placeholder="Search events (e.g., Taylor Swift, NBA)..."
                   className="pl-10"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-            </div>
+            </form>
 
             {/* Actions */}
             <div className="flex items-center gap-3">
