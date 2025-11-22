@@ -1,48 +1,181 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Calendar, MapPin, MessageSquare, Star, ArrowRight } from 'lucide-react';
+import { mockListings, mockEvents } from '@/utils/mockData';
+import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
+
 export default function Home() {
+  const [filter, setFilter] = useState<'all' | 'offer' | 'request'>('all');
+
+  const filteredListings = mockListings.filter(
+    listing => filter === 'all' || listing.type === filter
+  );
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <section className="text-center mb-12">
-        <h1 className="text-5xl font-bold text-gray-900 mb-4">
-          Welcome to TixPeer
-        </h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          The peer-to-peer marketplace connecting fans directly. Buy, sell, and trade tickets with other fans—no middleman, just community.
+    <div className="space-y-8 pb-20 md:pb-8">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-8 text-white">
+        <h1 className="text-3xl mb-2">Welcome to TixPeer</h1>
+        <p className="text-purple-100 mb-6">
+          The social marketplace where fans connect to barter and exchange tickets
         </p>
+        <div className="flex flex-wrap gap-4">
+          <Link href="/create?type=offer">
+            <Button variant="secondary" className="gap-2">
+              Offer Tickets
+              <ArrowRight className="size-4" />
+            </Button>
+          </Link>
+          <Link href="/create?type=request">
+            <Button variant="outline" className="gap-2 bg-white/10 text-white border-white/20 hover:bg-white/20">
+              Request Tickets
+              <ArrowRight className="size-4" />
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Trending Events */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl">Trending Events</h2>
+          <Button variant="ghost" size="sm">View All</Button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {mockEvents.map(event => (
+            <Link key={event.id} href={`/events/${event.id}`}>
+              <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+                <div className="aspect-video relative">
+                  <ImageWithFallback
+                    src={event.image}
+                    alt={event.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-2 right-2">
+                    <Badge variant="secondary" className="bg-white/90">
+                      {event.activeListings} listings
+                    </Badge>
+                  </div>
+                </div>
+                <div className="p-4 space-y-2">
+                  <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200">
+                    {event.category}
+                  </Badge>
+                  <h3 className="line-clamp-1">{event.name}</h3>
+                  <div className="flex items-center gap-2 text-slate-600 text-sm">
+                    <Calendar className="size-4" />
+                    {new Date(event.date).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-600 text-sm">
+                    <MapPin className="size-4" />
+                    {event.location}
+                  </div>
+                </div>
+              </Card>
+            </Link>
+          ))}
+        </div>
       </section>
 
-      <section className="grid md:grid-cols-3 gap-8 mb-12">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="text-4xl mb-4">🤝</div>
-          <h3 className="text-xl font-semibold mb-2">Direct Exchange</h3>
-          <p className="text-gray-600">
-            Connect directly with other fans. No platform fees, no inventory—just peer-to-peer trading.
-          </p>
-        </div>
+      {/* Listings Feed */}
+      <section>
+        <h2 className="text-2xl mb-4">Recent Listings</h2>
+        <Tabs value={filter} onValueChange={(v: string) => setFilter(v as 'all' | 'offer' | 'request')}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="all">All Listings</TabsTrigger>
+            <TabsTrigger value="offer">Offers</TabsTrigger>
+            <TabsTrigger value="request">Requests</TabsTrigger>
+          </TabsList>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="text-4xl mb-4">🎫</div>
-          <h3 className="text-xl font-semibold mb-2">List Your Tickets</h3>
-          <p className="text-gray-600">
-            Post tickets you want to sell or trade. Set your price and connect with interested buyers.
-          </p>
-        </div>
+          <TabsContent value={filter} className="space-y-4">
+            {filteredListings.map(listing => (
+              <Card key={listing.id} className="p-6 hover:shadow-lg transition-shadow">
+                <div className="flex flex-col md:flex-row gap-6">
+                  {/* Event Image */}
+                  <Link href={`/listings/${listing.id}`} className="md:w-48 flex-shrink-0">
+                    <div className="aspect-video rounded-lg overflow-hidden">
+                      <ImageWithFallback
+                        src={listing.eventImage}
+                        alt={listing.eventName}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform"
+                      />
+                    </div>
+                  </Link>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="text-4xl mb-4">🌐</div>
-          <h3 className="text-xl font-semibold mb-2">Community Marketplace</h3>
-          <p className="text-gray-600">
-            Browse listings from real fans. Negotiate, barter, and make deals in a trusted community space.
-          </p>
-        </div>
-      </section>
+                  {/* Listing Details */}
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge
+                            variant={listing.type === 'offer' ? 'default' : 'secondary'}
+                            className={listing.type === 'offer' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}
+                          >
+                            {listing.type === 'offer' ? 'Offering' : 'Requesting'}
+                          </Badge>
+                          <span className="text-slate-600">{listing.ticketCount} ticket{listing.ticketCount > 1 ? 's' : ''}</span>
+                        </div>
+                        <Link href={`/listings/${listing.id}`}>
+                          <h3 className="text-xl hover:text-purple-600 transition-colors">
+                            {listing.eventName}
+                          </h3>
+                        </Link>
+                        {listing.sectionInfo && (
+                          <p className="text-slate-600">{listing.sectionInfo}</p>
+                        )}
+                      </div>
+                    </div>
 
-      <section className="bg-primary-50 rounded-lg p-8 text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">
-          How TixPeer Works
-        </h2>
-        <p className="text-gray-600 mb-6">
-          We provide the platform, you make the connections. List your tickets, browse what others are offering, and negotiate directly. TixPeer simply brings fans together—all transactions happen peer-to-peer.
-        </p>
+                    <p className="text-slate-700">{listing.description}</p>
+
+                    {listing.lookingFor && (
+                      <div className="bg-slate-50 rounded-lg p-3">
+                        <p className="text-sm text-slate-600">
+                          <strong>Looking for:</strong> {listing.lookingFor}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* User Info & Actions */}
+                    <div className="flex items-center justify-between pt-3 border-t">
+                      <Link href={`/users/${listing.userId}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                        <Avatar>
+                          <AvatarImage src={listing.user.avatar} />
+                          <AvatarFallback>{listing.user.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p>{listing.user.name}</p>
+                          <div className="flex items-center gap-1 text-sm text-slate-600">
+                            <Star className="size-3 fill-yellow-400 text-yellow-400" />
+                            {listing.user.trustScore} • {listing.user.completedTrades} trades
+                          </div>
+                        </div>
+                      </Link>
+
+                      <Link href={`/listings/${listing.id}`}>
+                        <Button className="gap-2">
+                          <MessageSquare className="size-4" />
+                          Start Chat
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </TabsContent>
+        </Tabs>
       </section>
     </div>
   );
