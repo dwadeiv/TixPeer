@@ -1,21 +1,107 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Ticket, Search, Plus, User, MessageSquare, Home, MapPin } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Ticket, Search, Plus, User, MessageSquare, Home, MapPin, Calendar } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { LocationSelector } from './LocationSelector';
 import { useLocation } from '@/contexts/LocationContext';
+import { mockEvents } from '@/utils/mockData';
+import { Card } from './ui/card';
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const { location, setLocation } = useLocation();
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   const isActive = (path: string) => {
     return pathname === path;
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // If a suggestion is selected, navigate to it
+    if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
+      handleSuggestionClick(suggestions[selectedIndex].id);
+      return;
+    }
+
+    // Otherwise, perform regular search
+    if (searchQuery.trim()) {
+      router.push(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+      setShowSuggestions(false);
+      setSelectedIndex(-1);
+    }
+  };
+
+  // Filter events based on search query
+  const getSuggestions = () => {
+    if (!searchQuery.trim()) return [];
+
+    const filtered = mockEvents.filter(event =>
+      event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.venue.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.category.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    // Limit to 5 suggestions
+    return filtered.slice(0, 5);
+  };
+
+  const suggestions = getSuggestions();
+
+  // Reset selected index when suggestions change
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [searchQuery]);
+
+  // Handle clicking outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+        setSelectedIndex(-1);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSuggestionClick = (eventId: string) => {
+    setShowSuggestions(false);
+    setSearchQuery('');
+    setSelectedIndex(-1);
+    router.push(`/events/${eventId}`);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex((prev) =>
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case 'Escape':
+        setShowSuggestions(false);
+        setSelectedIndex(-1);
+        break;
+    }
   };
 
   return (
@@ -33,39 +119,76 @@ export default function Header() {
             </Link>
 
             {/* Search */}
-            <div className="hidden md:flex flex-1 max-w-md mx-8">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-slate-400" />
+            <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-8">
+              <div className="relative w-full" ref={searchRef}>
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-slate-400 z-10" />
                 <Input
                   type="search"
-                  placeholder="Search events, users, or listings..."
+                  placeholder="Search events"
                   className="pl-10"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
+                  onKeyDown={handleKeyDown}
                 />
+
+                {/* Search Suggestions Dropdown */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <Card className="absolute top-full mt-2 w-full shadow-lg border border-slate-200 z-50 max-h-96 overflow-y-auto">
+                    {suggestions.map((event, index) => (
+                      <button
+                        key={event.id}
+                        type="button"
+                        onClick={() => handleSuggestionClick(event.id)}
+                        onMouseEnter={() => setSelectedIndex(index)}
+                        className={`w-full p-3 transition-colors text-left border-b border-slate-100 last:border-b-0 ${
+                          selectedIndex === index
+                            ? 'bg-purple-50 border-l-2 border-l-purple-600'
+                            : 'hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-sm text-slate-900 truncate">
+                              {event.name}
+                            </h4>
+                            <div className="flex items-center gap-2 mt-1 text-xs text-slate-600">
+                              <Calendar className="size-3" />
+                              <span>
+                                {new Date(event.date).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric'
+                                })}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1 text-xs text-slate-600">
+                              <MapPin className="size-3" />
+                              <span className="truncate">{event.location}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </Card>
+                )}
               </div>
-            </div>
+            </form>
 
             {/* Actions */}
             <div className="flex items-center gap-3">
               {/* Location Button/Display */}
-              {location ? (
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => setLocationDialogOpen(true)}
-                >
-                  <MapPin className="size-4" />
-                  <span className="hidden sm:inline">{location.name}</span>
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => setLocationDialogOpen(true)}
-                >
-                  <MapPin className="size-4" />
-                  <span className="hidden sm:inline">Set Location</span>
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => setLocationDialogOpen(true)}
+              >
+                <MapPin className="size-4" />
+                <span className="hidden sm:inline">{location ? location.name : 'Any Location'}</span>
+              </Button>
 
               <Link href="/create">
                 <Button className="gap-2">

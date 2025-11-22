@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, MapPin, MessageSquare, Star, ArrowRight } from 'lucide-react';
+import { Calendar, MapPin, MessageSquare, Star, ArrowRight, Search as SearchIcon } from 'lucide-react';
 import { mockListings, mockEvents } from '@/utils/mockData';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 import { useLocation } from '@/contexts/LocationContext';
@@ -15,11 +16,25 @@ import { useLocation } from '@/contexts/LocationContext';
 export default function Home() {
   const [filter, setFilter] = useState<'all' | 'offer' | 'request'>('all');
   const { location } = useLocation();
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('search') || '';
 
-  // Filter events by selected location
-  const locationFilteredEvents = location
-    ? mockEvents.filter(event => event.city === location.name)
-    : mockEvents;
+  // Filter events by search query first
+  let filteredEvents = mockEvents;
+  if (searchQuery) {
+    filteredEvents = filteredEvents.filter(event =>
+      event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.venue.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.category.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
+
+  // Then filter by location if set (applies to both search and browsing)
+  if (location) {
+    filteredEvents = filteredEvents.filter(event => event.city === location.name);
+  }
+
+  const locationFilteredEvents = filteredEvents;
 
   const filteredListings = mockListings.filter(
     listing => filter === 'all' || listing.type === filter
@@ -53,17 +68,45 @@ export default function Home() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl">
-            {location ? `Events in ${location.name}` : 'Trending Events'}
+            {searchQuery && location
+              ? `Search Results for "${searchQuery}" in ${location.name}`
+              : searchQuery
+              ? `Search Results for "${searchQuery}"`
+              : location
+              ? `Events in ${location.name}`
+              : 'Trending Events'}
           </h2>
-          <Button variant="ghost" size="sm">View All</Button>
+          {searchQuery && (
+            <Link href="/">
+              <Button variant="ghost" size="sm">Clear Search</Button>
+            </Link>
+          )}
         </div>
         {locationFilteredEvents.length === 0 ? (
           <Card className="p-12 text-center">
-            <MapPin className="size-12 mx-auto mb-4 text-slate-400" />
-            <p className="text-slate-600 mb-2">No events found in {location?.name}</p>
-            <p className="text-sm text-slate-500 mb-4">
-              Try selecting a different city or check back later for new events
-            </p>
+            {searchQuery ? (
+              <>
+                <SearchIcon className="size-12 mx-auto mb-4 text-slate-400" />
+                <p className="text-slate-600 mb-2">
+                  No events found for "{searchQuery}"{location ? ` in ${location.name}` : ''}
+                </p>
+                <p className="text-sm text-slate-500 mb-4">
+                  Try searching for an artist name, sports team, or event type
+                  {location && ' or change your location'}
+                </p>
+                <Link href="/">
+                  <Button>View All Events</Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <MapPin className="size-12 mx-auto mb-4 text-slate-400" />
+                <p className="text-slate-600 mb-2">No events found in {location?.name}</p>
+                <p className="text-sm text-slate-500 mb-4">
+                  Try selecting a different city or check back later for new events
+                </p>
+              </>
+            )}
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
