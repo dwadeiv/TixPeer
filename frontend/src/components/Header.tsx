@@ -47,7 +47,7 @@ export default function Header() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-slate-400" />
                 <Input
                   type="search"
-                  placeholder="Search events (e.g., Taylor Swift, NBA)..."
+                  placeholder="Search events"
                   className="pl-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
