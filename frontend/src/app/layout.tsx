@@ -4,6 +4,7 @@ import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Providers } from '@/components/Providers';
+import { ScrollRestoration } from '@/components/ScrollRestoration';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -41,6 +42,7 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <Providers>
+          <ScrollRestoration />
           <div className="min-h-screen bg-slate-50">
             <Header />
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
