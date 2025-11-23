@@ -12,6 +12,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
@@ -92,12 +93,11 @@ export default function VerifyEmailPage() {
                 Redirecting to login page in 3 seconds...
               </p>
             </div>
-            <Button
-              onClick={() => router.push('/login')}
-              className="w-full"
-            >
-              Go to Login Now
-            </Button>
+            <Link href="/login" className="w-full">
+              <Button className="w-full">
+                Go to Login Now
+              </Button>
+            </Link>
           </div>
         )}
 
@@ -117,19 +117,16 @@ export default function VerifyEmailPage() {
               <p className="text-sm text-slate-600">
                 The verification link may have expired or is invalid.
               </p>
-              <Button
-                onClick={() => router.push('/verify-email-pending')}
-                className="w-full"
-              >
-                Resend Verification Email
-              </Button>
-              <Button
-                onClick={() => router.push('/login')}
-                variant="outline"
-                className="w-full"
-              >
-                Back to Login
-              </Button>
+              <Link href="/verify-email-pending" className="w-full block">
+                <Button className="w-full">
+                  Resend Verification Email
+                </Button>
+              </Link>
+              <Link href="/login" className="w-full block">
+                <Button variant="outline" className="w-full">
+                  Back to Login
+                </Button>
+              </Link>
             </div>
           </div>
         )}
