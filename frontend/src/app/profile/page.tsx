@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,14 +8,53 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Star, Calendar, CheckCircle2, Settings } from 'lucide-react';
-import { currentUser, mockListings } from '@/utils/mockData';
+import { api } from '@/lib/api';
 
 export default function Profile() {
   const [activeTab, setActiveTab] = useState('active');
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [userListings, setUserListings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const userListings = mockListings.filter(l => l.userId === currentUser.id);
-  const activeListings = userListings.filter(l => l.status === 'active');
-  const completedListings = userListings.filter(l => l.status === 'completed');
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        setLoading(true);
+        const [userData, listingsData] = await Promise.all([
+          api.getProfile(),
+          api.getListings()
+        ]);
+        setCurrentUser(userData);
+        const myListings = listingsData.filter((l: any) => l.userId === userData.id);
+        setUserListings(myListings);
+      } catch (error) {
+        console.error('Error fetching profile data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-slate-600">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-slate-600">Please log in to view your profile</p>
+      </div>
+    );
+  }
+
+  const activeListings = userListings.filter((l: any) => l.status === 'active');
+  const completedListings = userListings.filter((l: any) => l.status === 'completed');
 
   return (
     <div className="max-w-4xl mx-auto pb-20 md:pb-8">

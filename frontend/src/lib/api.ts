@@ -113,6 +113,53 @@ class ApiClient {
     const response = await this.client.patch('/users/profile', data);
     return response.data;
   }
+
+  async getUsers() {
+    const response = await this.client.get('/users');
+    return response.data;
+  }
+
+  async getUser(id: string) {
+    const response = await this.client.get(`/users/${id}`);
+    return response.data;
+  }
+
+  // Events endpoints
+  async getEvents(params?: { city?: string; category?: string }) {
+    const response = await this.client.get('/events', { params });
+    return response.data;
+  }
+
+  async getEvent(id: string) {
+    const response = await this.client.get(`/events/${id}`);
+    return response.data;
+  }
+
+  // Listings endpoints
+  async getListings(params?: { eventId?: string; userId?: string }) {
+    const response = await this.client.get('/listings', { params });
+    return response.data;
+  }
+
+  async getListing(id: string) {
+    const response = await this.client.get(`/listings/${id}`);
+    return response.data;
+  }
+
+  async createListing(data: any) {
+    const response = await this.client.post('/listings', data);
+    return response.data;
+  }
+
+  async updateListing(id: string, data: any) {
+    const response = await this.client.patch(`/listings/${id}`, data);
+    return response.data;
+  }
+
+  async deleteListing(id: string) {
+    const response = await this.client.delete(`/listings/${id}`);
+    return response.data;
+  }
 }
 
 export const api = new ApiClient();
