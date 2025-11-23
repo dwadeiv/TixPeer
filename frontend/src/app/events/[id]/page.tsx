@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
@@ -8,14 +9,23 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Calendar, MapPin, Users, MessageSquare, Star } from 'lucide-react';
-import { mockEvents, mockListings } from '@/utils/mockData';
+import { mockEvents } from '@/utils/mockData';
+import { generateListingsForEvent } from '@/utils/generateListings';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
+import { Listing } from '@/types';
 
 export default function EventDetail() {
   const params = useParams();
   const router = useRouter();
   const event = mockEvents.find(e => e.id === params.id);
-  const eventListings = mockListings.filter(l => l.eventId === params.id);
+  const [eventListings, setEventListings] = useState<Listing[]>([]);
+
+  useEffect(() => {
+    if (event) {
+      const listings = generateListingsForEvent(event);
+      setEventListings(listings);
+    }
+  }, [event]);
 
   if (!event) {
     return <div>Event not found</div>;
@@ -89,149 +99,188 @@ export default function EventDetail() {
 
             <TabsContent value="all" className="space-y-4">
               {eventListings.map(listing => (
-                <Card key={listing.id} className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <Badge
-                        variant={listing.type === 'offer' ? 'default' : 'secondary'}
-                        className={listing.type === 'offer' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}
-                      >
-                        {listing.type === 'offer' ? 'Offering' : 'Requesting'} {listing.ticketCount} ticket{listing.ticketCount > 1 ? 's' : ''}
-                      </Badge>
-                      {listing.sectionInfo && (
-                        <p className="text-slate-600 mt-2">{listing.sectionInfo}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <p className="text-slate-700 mb-4">{listing.description}</p>
-
-                  {listing.lookingFor && (
-                    <div className="bg-slate-50 rounded-lg p-3 mb-4">
-                      <p className="text-sm text-slate-600">
-                        <strong>Looking for:</strong> {listing.lookingFor}
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <Link href={`/users/${listing.userId}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                      <Avatar>
-                        <AvatarImage src={listing.user.avatar} />
-                        <AvatarFallback>{listing.user.name[0]}</AvatarFallback>
-                      </Avatar>
+                <Link key={listing.id} href={`/listings/${listing.id}`} className="block">
+                  <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                    <div className="flex items-start justify-between mb-4">
                       <div>
-                        <p>{listing.user.name}</p>
-                        <div className="flex items-center gap-1 text-sm text-slate-600">
-                          <Star className="size-3 fill-yellow-400 text-yellow-400" />
-                          {listing.user.trustScore} • {listing.user.completedTrades} trades
+                        <Badge
+                          variant={listing.type === 'offer' ? 'default' : 'secondary'}
+                          className={listing.type === 'offer' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}
+                        >
+                          {listing.type === 'offer' ? 'Offering' : 'Requesting'} {listing.ticketCount} ticket{listing.ticketCount > 1 ? 's' : ''}
+                        </Badge>
+                        {listing.sectionInfo && (
+                          <p className="text-slate-600 mt-2">{listing.sectionInfo}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-slate-700 mb-4">{listing.description}</p>
+
+                    {listing.lookingFor && (
+                      <div className="bg-slate-50 rounded-lg p-3 mb-4">
+                        <p className="text-sm text-slate-600">
+                          <strong>Looking for:</strong> {listing.lookingFor}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-4 border-t">
+                      <div
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          router.push(`/users/${listing.userId}`);
+                        }}
+                        className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+                      >
+                        <Avatar>
+                          <AvatarImage src={listing.user.avatar} />
+                          <AvatarFallback>{listing.user.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p>{listing.user.name}</p>
+                          <div className="flex items-center gap-1 text-sm text-slate-600">
+                            <Star className="size-3 fill-yellow-400 text-yellow-400" />
+                            {listing.user.trustScore} • {listing.user.completedTrades} trades
+                          </div>
                         </div>
                       </div>
-                    </Link>
 
-                    <Link href={`/listings/${listing.id}`}>
-                      <Button className="gap-2">
+                      <Button
+                        className="gap-2"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                      >
                         <MessageSquare className="size-4" />
                         Chat
                       </Button>
-                    </Link>
-                  </div>
-                </Card>
+                    </div>
+                  </Card>
+                </Link>
               ))}
             </TabsContent>
 
             <TabsContent value="offers" className="space-y-4">
               {offers.map(listing => (
-                <Card key={listing.id} className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <Badge className="bg-green-100 text-green-700">
-                        Offering {listing.ticketCount} ticket{listing.ticketCount > 1 ? 's' : ''}
-                      </Badge>
-                      {listing.sectionInfo && (
-                        <p className="text-slate-600 mt-2">{listing.sectionInfo}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <p className="text-slate-700 mb-4">{listing.description}</p>
-
-                  {listing.lookingFor && (
-                    <div className="bg-slate-50 rounded-lg p-3 mb-4">
-                      <p className="text-sm text-slate-600">
-                        <strong>Looking for:</strong> {listing.lookingFor}
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <Link href={`/users/${listing.userId}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                      <Avatar>
-                        <AvatarImage src={listing.user.avatar} />
-                        <AvatarFallback>{listing.user.name[0]}</AvatarFallback>
-                      </Avatar>
+                <Link key={listing.id} href={`/listings/${listing.id}`} className="block">
+                  <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                    <div className="flex items-start justify-between mb-4">
                       <div>
-                        <p>{listing.user.name}</p>
-                        <div className="flex items-center gap-1 text-sm text-slate-600">
-                          <Star className="size-3 fill-yellow-400 text-yellow-400" />
-                          {listing.user.trustScore}
+                        <Badge className="bg-green-100 text-green-700">
+                          Offering {listing.ticketCount} ticket{listing.ticketCount > 1 ? 's' : ''}
+                        </Badge>
+                        {listing.sectionInfo && (
+                          <p className="text-slate-600 mt-2">{listing.sectionInfo}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-slate-700 mb-4">{listing.description}</p>
+
+                    {listing.lookingFor && (
+                      <div className="bg-slate-50 rounded-lg p-3 mb-4">
+                        <p className="text-sm text-slate-600">
+                          <strong>Looking for:</strong> {listing.lookingFor}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-4 border-t">
+                      <div
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          router.push(`/users/${listing.userId}`);
+                        }}
+                        className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+                      >
+                        <Avatar>
+                          <AvatarImage src={listing.user.avatar} />
+                          <AvatarFallback>{listing.user.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p>{listing.user.name}</p>
+                          <div className="flex items-center gap-1 text-sm text-slate-600">
+                            <Star className="size-3 fill-yellow-400 text-yellow-400" />
+                            {listing.user.trustScore} • {listing.user.completedTrades} trades
+                          </div>
                         </div>
                       </div>
-                    </Link>
 
-                    <Link href={`/listings/${listing.id}`}>
-                      <Button className="gap-2">
+                      <Button
+                        className="gap-2"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                      >
                         <MessageSquare className="size-4" />
                         Chat
                       </Button>
-                    </Link>
-                  </div>
-                </Card>
+                    </div>
+                  </Card>
+                </Link>
               ))}
             </TabsContent>
 
             <TabsContent value="requests" className="space-y-4">
               {requests.map(listing => (
-                <Card key={listing.id} className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <Badge className="bg-blue-100 text-blue-700">
-                      Requesting {listing.ticketCount} ticket{listing.ticketCount > 1 ? 's' : ''}
-                    </Badge>
-                  </div>
-
-                  <p className="text-slate-700 mb-4">{listing.description}</p>
-
-                  {listing.lookingFor && (
-                    <div className="bg-slate-50 rounded-lg p-3 mb-4">
-                      <p className="text-sm text-slate-600">
-                        <strong>Open to trading:</strong> {listing.lookingFor}
-                      </p>
+                <Link key={listing.id} href={`/listings/${listing.id}`} className="block">
+                  <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                    <div className="flex items-start justify-between mb-4">
+                      <Badge className="bg-blue-100 text-blue-700">
+                        Requesting {listing.ticketCount} ticket{listing.ticketCount > 1 ? 's' : ''}
+                      </Badge>
                     </div>
-                  )}
 
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <Link href={`/users/${listing.userId}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                      <Avatar>
-                        <AvatarImage src={listing.user.avatar} />
-                        <AvatarFallback>{listing.user.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p>{listing.user.name}</p>
-                        <div className="flex items-center gap-1 text-sm text-slate-600">
-                          <Star className="size-3 fill-yellow-400 text-yellow-400" />
-                          {listing.user.trustScore}
+                    <p className="text-slate-700 mb-4">{listing.description}</p>
+
+                    {listing.lookingFor && (
+                      <div className="bg-slate-50 rounded-lg p-3 mb-4">
+                        <p className="text-sm text-slate-600">
+                          <strong>Open to trading:</strong> {listing.lookingFor}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-4 border-t">
+                      <div
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          router.push(`/users/${listing.userId}`);
+                        }}
+                        className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+                      >
+                        <Avatar>
+                          <AvatarImage src={listing.user.avatar} />
+                          <AvatarFallback>{listing.user.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p>{listing.user.name}</p>
+                          <div className="flex items-center gap-1 text-sm text-slate-600">
+                            <Star className="size-3 fill-yellow-400 text-yellow-400" />
+                            {listing.user.trustScore} • {listing.user.completedTrades} trades
+                          </div>
                         </div>
                       </div>
-                    </Link>
 
-                    <Link href={`/listings/${listing.id}`}>
-                      <Button className="gap-2">
+                      <Button
+                        className="gap-2"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                      >
                         <MessageSquare className="size-4" />
                         Chat
                       </Button>
-                    </Link>
-                  </div>
-                </Card>
+                    </div>
+                  </Card>
+                </Link>
               ))}
             </TabsContent>
           </Tabs>
