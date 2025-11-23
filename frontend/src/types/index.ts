@@ -7,7 +7,7 @@ export interface User {
   completedTrades: number;
   bio?: string;
   location?: string;
-  favoriteGenres?: string[];
+  favoriteEvents?: string[];
   badges?: string[];
   responseTime?: string;
   verifiedUser?: boolean;
