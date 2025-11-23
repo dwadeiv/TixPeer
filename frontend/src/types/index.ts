@@ -5,6 +5,12 @@ export interface User {
   joinedDate: string;
   trustScore: number;
   completedTrades: number;
+  bio?: string;
+  location?: string;
+  favoriteGenres?: string[];
+  badges?: string[];
+  responseTime?: string;
+  verifiedUser?: boolean;
 }
 
 export interface Listing {
