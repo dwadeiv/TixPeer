@@ -88,13 +88,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /**
    * Register new user account
-   * Automatically logs in after successful registration
+   * Does NOT auto-login - user must verify email first
    */
   const register = async (email: string, password: string, name: string) => {
     try {
       await api.register(email, password, name);
-      // Auto-login after registration
-      await login(email, password);
+      // No auto-login - user must verify email before logging in
     } catch (error: any) {
       console.error('Registration error:', error);
       throw new Error(error.response?.data?.message || 'Registration failed');

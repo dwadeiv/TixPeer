@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { EmailService } from './email.service';
 
 /**
@@ -7,6 +8,7 @@ import { EmailService } from './email.service';
  * Exports EmailService for use in auth, notifications, etc.
  */
 @Module({
+  imports: [ConfigModule],
   providers: [EmailService],
   exports: [EmailService],
 })

@@ -25,6 +25,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Check if email is verified
+    if (!user.isEmailVerified) {
+      throw new UnauthorizedException('Please verify your email address before logging in. Check your inbox for the verification link.');
+    }
+
     const { password: _, ...result } = user;
     return result;
   }
@@ -87,8 +92,8 @@ export class AuthService {
     // Mark email as verified and clear token
     await this.usersService.update(user.id, {
       isEmailVerified: true,
-      emailVerificationToken: null,
-      emailVerificationTokenExpiry: null,
+      emailVerificationToken: undefined,
+      emailVerificationTokenExpiry: undefined,
     });
 
     // Send welcome email

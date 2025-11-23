@@ -139,6 +139,15 @@ class ApiClient {
     this.removeToken();
   }
 
+  /**
+   * Resends email verification link to user's email address
+   * @param email - Email address to send verification link to
+   */
+  async resendVerificationEmail(email: string) {
+    const response = await this.client.post('/auth/resend-verification', { email });
+    return response.data;
+  }
+
   // ========== Legacy Tickets Endpoints (Deprecated - Use Listings Instead) ==========
 
   async getTickets(params?: { category?: string; search?: string }) {
