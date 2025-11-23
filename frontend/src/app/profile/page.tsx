@@ -2,22 +2,44 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Star, Calendar, CheckCircle2, Settings } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 
 export default function Profile() {
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('active');
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userListings, setUserListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  /**
+   * Redirect to login if user is not authenticated
+   * Only runs after AuthContext has finished loading
+   */
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  /**
+   * Fetch profile data only if user is authenticated
+   */
   useEffect(() => {
     const fetchProfileData = async () => {
+      // Don't fetch if not authenticated or still loading auth state
+      if (authLoading || !isAuthenticated) {
+        return;
+      }
+
       try {
         setLoading(true);
         const [userData, listingsData] = await Promise.all([
@@ -35,9 +57,10 @@ export default function Profile() {
     };
 
     fetchProfileData();
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
-  if (loading) {
+  // Show loading state while checking authentication or fetching data
+  if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <p className="text-slate-600">Loading...</p>
@@ -45,10 +68,15 @@ export default function Profile() {
     );
   }
 
-  if (!currentUser) {
+  // This shouldn't show because of the redirect in useEffect above
+  // but keeping as a fallback
+  if (!isAuthenticated || !currentUser) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <p className="text-slate-600">Please log in to view your profile</p>
+        <Link href="/login">
+          <Button>Go to Login</Button>
+        </Link>
       </div>
     );
   }
