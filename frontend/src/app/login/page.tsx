@@ -70,7 +70,14 @@ export default function LoginPage() {
       await login(email, password);
       router.push('/profile');
     } catch (err: any) {
-      setError(err.message || 'Invalid email or password');
+      // Check if the error is about email verification
+      if (err.message && err.message.includes('verify your email')) {
+        // Store email in session storage so the waiting page can use it
+        sessionStorage.setItem('pendingVerificationEmail', email);
+        router.push('/verify-email-pending');
+      } else {
+        setError(err.message || 'Invalid email or password');
+      }
     } finally {
       setIsLoading(false);
     }
