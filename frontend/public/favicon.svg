@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9333ea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="url(#gradient)"/>
+  <!-- Ticket icon matching Lucide design -->
+  <path d="M8 10C8 9.44772 8.44772 9 9 9H23C23.5523 9 24 9.44772 24 10V12.5C23.1716 12.5 22.5 13.1716 22.5 14C22.5 14.8284 23.1716 15.5 24 15.5V18C24 18.5523 23.5523 19 23 19H9C8.44772 19 8 18.5523 8 18V15.5C8.82843 15.5 9.5 14.8284 9.5 14C9.5 13.1716 8.82843 12.5 8 12.5V10Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <line x1="16" y1="12" x2="16" y2="16" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="0.5 1.5"/>
+</svg>
