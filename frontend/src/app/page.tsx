@@ -94,13 +94,25 @@ export default function Home() {
   const locationFilteredEvents = filteredEvents;
 
   /**
-   * Listing Type Filtering
-   * Simple client-side filter for tabs - shows all, offers only, or requests only
-   * Filters already-fetched data rather than making new API calls for better performance
+   * Listing Filtering
+   * Two-stage filtering for listings feed:
+   * 1. Location filter - only show listings for events in the selected location
+   * 2. Type filter - show all, offers only, or requests only
+   *
+   * This ensures listings match the events being displayed above
    */
-  const filteredListings = listings.filter(
-    listing => filter === 'all' || listing.type === filter
-  );
+  // Get event IDs that match the current location/search filters
+  const filteredEventIds = new Set(locationFilteredEvents.map(event => event.id));
+
+  const filteredListings = listings.filter(listing => {
+    // Stage 1: Filter by location - only show listings for visible events
+    const matchesLocation = filteredEventIds.has(listing.eventId);
+
+    // Stage 2: Filter by type (all/offer/request)
+    const matchesType = filter === 'all' || listing.type === filter;
+
+    return matchesLocation && matchesType;
+  });
 
   if (loading) {
     return (
