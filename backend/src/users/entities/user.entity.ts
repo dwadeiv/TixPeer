@@ -10,67 +10,117 @@ import { Exclude } from 'class-transformer';
 import { Ticket } from '../../tickets/entities/ticket.entity';
 import { Transaction } from '../../transactions/entities/transaction.entity';
 
+/**
+ * User Entity
+ * Represents a user account in the TixPeer marketplace.
+ * Users can create listings (offers/requests), trade tickets, and build trust scores.
+ */
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  /** Unique email address for login and communication */
   @Column({ unique: true })
   email: string;
 
+  /**
+   * Bcrypt-hashed password for authentication
+   * @Exclude decorator ensures password is never sent in API responses
+   */
   @Column()
   @Exclude()
   password: string;
 
+  /** Display name shown on profile and listings */
   @Column()
   name: string;
 
+  /** Optional phone number for verified users */
   @Column({ nullable: true })
   phone: string;
 
+  /** Account status - inactive users cannot create listings or trade */
   @Column({ default: true })
   isActive: boolean;
 
-  // Profile fields
+  // ========== Profile & Trust System Fields ==========
+
+  /** Profile picture URL (typically from avatar service or upload) */
   @Column({ nullable: true })
   avatar: string;
 
+  /**
+   * Trust score from 0.0 to 5.0 based on completed trades and user ratings
+   * Higher scores indicate more reliable traders
+   */
   @Column({ type: 'decimal', precision: 3, scale: 1, default: 0 })
   trustScore: number;
 
+  /**
+   * Total number of successful ticket exchanges
+   * Displayed on profile to show trading history
+   */
   @Column({ default: 0 })
   completedTrades: number;
 
+  /** User's bio/description for their profile */
   @Column({ type: 'text', nullable: true })
   bio: string;
 
+  /** City/region for local ticket exchanges and filtering */
   @Column({ nullable: true })
   location: string;
 
+  /**
+   * Categories of events user is interested in (Sports, Music, Theater, etc.)
+   * Stored as comma-separated array for filtering and recommendations
+   */
   @Column({ type: 'simple-array', nullable: true })
   favoriteEvents: string[];
 
+  /**
+   * Earned badges like "Verified", "Top Trader", "Quick Responder"
+   * Displayed on profile to build credibility
+   */
   @Column({ type: 'simple-array', nullable: true })
   badges: string[];
 
+  /**
+   * Average response time for messages (e.g., "< 1 hour", "< 4 hours")
+   * Calculated from message activity to help users find responsive traders
+   */
   @Column({ nullable: true })
   responseTime: string;
 
+  /**
+   * Whether user has completed identity/phone verification
+   * Verified users get a badge and higher trust from other users
+   */
   @Column({ default: false })
   verifiedUser: boolean;
 
+  // ========== Relations ==========
+
+  /** Legacy tickets this user is selling (from old Ticket entity) */
   @OneToMany(() => Ticket, (ticket) => ticket.seller)
   ticketsForSale: Ticket[];
 
+  /** Transactions where this user is the buyer */
   @OneToMany(() => Transaction, (transaction) => transaction.buyer)
   purchases: Transaction[];
 
+  /** Transactions where this user is the seller */
   @OneToMany(() => Transaction, (transaction) => transaction.seller)
   sales: Transaction[];
 
+  // ========== Timestamps ==========
+
+  /** When the user account was created */
   @CreateDateColumn()
   createdAt: Date;
 
+  /** Last time user profile was updated */
   @UpdateDateColumn()
   updatedAt: Date;
 }

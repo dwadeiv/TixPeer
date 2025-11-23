@@ -1,3 +1,15 @@
+/**
+ * Homepage Component
+ * Main landing page for TixPeer marketplace that displays:
+ * 1. Trending events with active listing counts
+ * 2. Recent marketplace listings (offers and requests)
+ *
+ * Features:
+ * - Search filtering via URL query params (?search=...)
+ * - Location-based filtering from LocationContext
+ * - Tab-based listing type filtering (all/offer/request)
+ * - All data from backend API - NO mock/hardcoded data
+ */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -15,19 +27,29 @@ import { api } from '@/lib/api';
 import { Event, Listing } from '@/types';
 
 export default function Home() {
+  // Listing type filter for marketplace feed (all offers, just offers, or just requests)
   const [filter, setFilter] = useState<'all' | 'offer' | 'request'>('all');
   const [events, setEvents] = useState<Event[]>([]);
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Location from global context - allows users to filter events by city
   const { location } = useLocation();
+
+  // Search query from URL params - supports deep linking to search results
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
 
-  // Fetch events and listings from API
+  /**
+   * Fetch all events and listings on mount
+   * Uses Promise.all to make parallel API requests for faster loading
+   * This is critical for good UX - users see all data at once
+   */
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        // Parallel fetching - much faster than sequential API calls
         const [eventsData, listingsData] = await Promise.all([
           api.getEvents(),
           api.getListings()
@@ -44,8 +66,18 @@ export default function Home() {
     fetchData();
   }, []);
 
-  // Filter events by search query first
+  /**
+   * Event Filtering Logic
+   * Applied in TWO stages for better UX:
+   * 1. Search filter - narrows down by keyword (name/venue/category)
+   * 2. Location filter - further narrows by city
+   *
+   * This order matters: searching "Taylor Swift" in "Los Angeles" should
+   * show all Taylor Swift events in LA, not LA events matching "Taylor Swift"
+   */
   let filteredEvents = events;
+
+  // Stage 1: Filter by search query (case-insensitive match on name, venue, or category)
   if (searchQuery) {
     filteredEvents = filteredEvents.filter(event =>
       event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -54,13 +86,18 @@ export default function Home() {
     );
   }
 
-  // Then filter by location if set (applies to both search and browsing)
+  // Stage 2: Filter by location (applies to both search results and general browsing)
   if (location) {
     filteredEvents = filteredEvents.filter(event => event.city === location.name);
   }
 
   const locationFilteredEvents = filteredEvents;
 
+  /**
+   * Listing Type Filtering
+   * Simple client-side filter for tabs - shows all, offers only, or requests only
+   * Filters already-fetched data rather than making new API calls for better performance
+   */
   const filteredListings = listings.filter(
     listing => filter === 'all' || listing.type === filter
   );
@@ -97,10 +134,12 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Trending Events */}
+      {/* Trending Events Section */}
       <section>
+        {/* Dynamic Header - changes based on active filters */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl">
+            {/* Show most specific filter first: search + location > search > location > default */}
             {searchQuery && location
               ? `Search Results for "${searchQuery}" in ${location.name}`
               : searchQuery
@@ -115,6 +154,8 @@ export default function Home() {
             </Link>
           )}
         </div>
+
+        {/* Empty State - different messages for search vs location filtering */}
         {locationFilteredEvents.length === 0 ? (
           <Card className="p-12 text-center">
             {searchQuery ? (
@@ -152,6 +193,7 @@ export default function Home() {
                     alt={event.name}
                     className="w-full h-full object-cover"
                   />
+                  {/* Active listings badge - shows marketplace activity for this event */}
                   <div className="absolute top-2 right-2">
                     <Badge variant="secondary" className="bg-white/90">
                       {event.activeListings} listings
@@ -183,7 +225,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* Listings Feed */}
+      {/* Listings Feed - Shows all active marketplace listings */}
       <section>
         <h2 className="text-2xl mb-4">Recent Listings</h2>
         <Tabs value={filter} onValueChange={(v: string) => setFilter(v as 'all' | 'offer' | 'request')}>
@@ -197,7 +239,7 @@ export default function Home() {
             {filteredListings.map(listing => (
               <Card key={listing.id} className="p-6 hover:shadow-lg transition-shadow">
                 <div className="flex flex-col md:flex-row gap-6">
-                  {/* Event Image */}
+                  {/* Event Image - uses denormalized event data stored on listing */}
                   <Link href={`/listings/${listing.id}`} className="md:w-48 flex-shrink-0">
                     <div className="aspect-video rounded-lg overflow-hidden">
                       <ImageWithFallback
@@ -212,6 +254,7 @@ export default function Home() {
                   <div className="flex-1 space-y-3">
                     <div className="flex items-start justify-between gap-4">
                       <div>
+                        {/* Type badge with color coding: green for offers, blue for requests */}
                         <div className="flex items-center gap-2 mb-2">
                           <Badge
                             variant={listing.type === 'offer' ? 'default' : 'secondary'}
@@ -226,6 +269,7 @@ export default function Home() {
                             {listing.eventName}
                           </h3>
                         </Link>
+                        {/* Section info - optional, more common for "offer" listings where user has specific seats */}
                         {listing.sectionInfo && (
                           <p className="text-slate-600">{listing.sectionInfo}</p>
                         )}
@@ -234,6 +278,7 @@ export default function Home() {
 
                     <p className="text-slate-700">{listing.description}</p>
 
+                    {/* "Looking for" field - helps facilitate trades and barter */}
                     {listing.lookingFor && (
                       <div className="bg-slate-50 rounded-lg p-3">
                         <p className="text-sm text-slate-600">
@@ -242,7 +287,7 @@ export default function Home() {
                       </div>
                     )}
 
-                    {/* User Info & Actions */}
+                    {/* User Info & Actions - displays trust score and completed trades to build confidence */}
                     <div className="flex items-center justify-between pt-3 border-t">
                       <Link href={`/users/${listing.userId}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                         <Avatar>
@@ -251,6 +296,7 @@ export default function Home() {
                         </Avatar>
                         <div>
                           <p>{listing.user.name}</p>
+                          {/* Trust system - shows reliability based on completed trades and ratings */}
                           <div className="flex items-center gap-1 text-sm text-slate-600">
                             <Star className="size-3 fill-yellow-400 text-yellow-400" />
                             {listing.user.trustScore} • {listing.user.completedTrades} trades
