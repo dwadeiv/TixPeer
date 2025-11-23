@@ -81,7 +81,7 @@ class ApiClient {
    */
   private getToken(): string | null {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('auth_token');
+      return localStorage.getItem('authToken');
     }
     return null;
   }
@@ -91,17 +91,22 @@ class ApiClient {
    */
   private removeToken(): void {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem('authToken');
     }
   }
 
   /**
    * Stores JWT token after successful login
    * Token will be automatically attached to all subsequent requests
+   * Pass null to clear the token (logout)
    */
-  setToken(token: string): void {
+  setToken(token: string | null): void {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_token', token);
+      if (token) {
+        localStorage.setItem('authToken', token);
+      } else {
+        this.removeToken();
+      }
     }
   }
 

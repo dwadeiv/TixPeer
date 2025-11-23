@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Get, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -21,5 +21,25 @@ export class AuthController {
   @ApiOperation({ summary: 'Login with email and password' })
   async login(@Request() req: any) {
     return this.authService.login(req.user);
+  }
+
+  /**
+   * Verify email using token sent via email
+   * GET /auth/verify-email?token=xxx
+   */
+  @Get('verify-email')
+  @ApiOperation({ summary: 'Verify email address with token' })
+  async verifyEmail(@Query('token') token: string) {
+    return this.authService.verifyEmail(token);
+  }
+
+  /**
+   * Resend verification email
+   * POST /auth/resend-verification
+   */
+  @Post('resend-verification')
+  @ApiOperation({ summary: 'Resend verification email' })
+  async resendVerification(@Body() body: { email: string }) {
+    return this.authService.resendVerificationEmail(body.email);
   }
 }
