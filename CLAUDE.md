@@ -6,6 +6,51 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directly to buy, sell, and trade event tickets. Unlike traditional platforms, TixPeer doesn't hold inventory or act as a seller—it simply provides the marketplace space for users to list tickets and connect with each other. The application features user authentication, ticket listings with search/filter capabilities, peer-to-peer transaction facilitation, and user profile management.
 
+## CRITICAL DEVELOPMENT RULES
+
+**These rules MUST be followed for all feature development and code modifications:**
+
+1. **End-to-End Functionality Required**
+   - Every feature must work completely from frontend → backend → database
+   - No half-implemented features or placeholder functionality
+   - Test the full user flow before considering a feature complete
+
+2. **NO Mock or Random Data in Frontend**
+   - All data displayed in the frontend MUST come from the backend API
+   - NEVER use hardcoded arrays, faker libraries, or random data generators in frontend components
+   - If a feature needs data, implement the backend endpoint and database model first
+   - The only exception is initial seed data in `backend/src/database/seeds/` for development
+
+3. **Full-Stack Development Always**
+   - Do not avoid backend work - implement what's required for the feature
+   - Create/modify database entities, services, controllers, and API endpoints as needed
+   - Ensure proper data flow: Database ↔ Backend API ↔ Frontend
+   - Update API client methods in `frontend/src/lib/api.ts` for all new endpoints
+
+4. **Code Must Be Well-Commented**
+   - Add clear comments explaining:
+     - WHY code exists (business logic and reasoning)
+     - WHAT complex operations do (step-by-step for non-obvious code)
+     - Important data flows and transformations
+     - API contracts, expected request/response formats
+   - Use JSDoc comments for functions with parameters and return types
+   - Make code readable and maintainable for human developers
+   - Example:
+     ```typescript
+     /**
+      * Fetches all active listings for a specific event
+      * @param eventId - UUID of the event
+      * @returns Array of listings with user and event details populated
+      */
+     async getListingsByEvent(eventId: string): Promise<Listing[]> {
+       // Query includes relations to avoid N+1 queries
+       return this.listingRepository.find({
+         where: { eventId, status: 'active' },
+         relations: ['user', 'event']
+       });
+     }
+     ```
+
 ## Technology Stack
 
 - **Frontend**: Next.js 14+ with TypeScript, App Router, Tailwind CSS
