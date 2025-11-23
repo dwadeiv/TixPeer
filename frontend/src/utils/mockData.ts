@@ -7,6 +7,12 @@ export const currentUser: User = {
   joinedDate: '2024-01-15',
   trustScore: 4.8,
   completedTrades: 23,
+  bio: 'Concert enthusiast and sports fan. Always looking for good deals on tickets!',
+  location: 'Los Angeles, CA',
+  favoriteGenres: ['Music', 'Sports'],
+  badges: ['Verified', 'Quick Responder'],
+  responseTime: '< 1 hour',
+  verifiedUser: true,
 };
 
 export const mockUsers: User[] = [
@@ -17,6 +23,12 @@ export const mockUsers: User[] = [
     joinedDate: '2023-11-20',
     trustScore: 4.9,
     completedTrades: 47,
+    bio: 'Theater lover and Broadway regular. I love trading tickets to see as many shows as possible! Always fair and honest in my trades.',
+    location: 'New York, NY',
+    favoriteGenres: ['Theater', 'Music'],
+    badges: ['Verified', 'Top Trader', 'Quick Responder'],
+    responseTime: '< 30 min',
+    verifiedUser: true,
   },
   {
     id: '2',
@@ -25,6 +37,12 @@ export const mockUsers: User[] = [
     joinedDate: '2024-02-10',
     trustScore: 4.7,
     completedTrades: 31,
+    bio: 'Die-hard sports fan! Follow all the major leagues. Looking to trade tickets for games I can\'t attend. Lakers, Dodgers, Rams fan!',
+    location: 'Los Angeles, CA',
+    favoriteGenres: ['Sports'],
+    badges: ['Verified'],
+    responseTime: '< 2 hours',
+    verifiedUser: true,
   },
   {
     id: '3',
@@ -33,6 +51,12 @@ export const mockUsers: User[] = [
     joinedDate: '2023-09-05',
     trustScore: 5.0,
     completedTrades: 62,
+    bio: 'Music festival junkie and concert photographer. I attend 50+ shows a year! Love discovering new artists and helping fellow music lovers get great seats.',
+    location: 'Austin, TX',
+    favoriteGenres: ['Music', 'Festival'],
+    badges: ['Verified', 'Top Trader', 'Power User', 'Quick Responder'],
+    responseTime: '< 15 min',
+    verifiedUser: true,
   },
   {
     id: '4',
@@ -41,6 +65,12 @@ export const mockUsers: User[] = [
     joinedDate: '2024-03-12',
     trustScore: 4.6,
     completedTrades: 18,
+    bio: 'New to ticket trading but loving it! Big fan of live events - sports, concerts, comedy shows. Open to all trades!',
+    location: 'Chicago, IL',
+    favoriteGenres: ['Sports', 'Music', 'Comedy'],
+    badges: ['Verified'],
+    responseTime: '< 3 hours',
+    verifiedUser: true,
   },
 ];
 

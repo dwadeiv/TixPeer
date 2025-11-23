@@ -83,7 +83,9 @@ export default function ListingDetail() {
                 >
                   {listing.type === 'offer' ? 'Offering' : 'Requesting'} {listing.ticketCount} ticket{listing.ticketCount > 1 ? 's' : ''}
                 </Badge>
-                <h1 className="text-3xl">{listing.eventName}</h1>
+                <Link href={`/events/${listing.eventId}`}>
+                  <h1 className="text-3xl hover:text-purple-600 transition-colors cursor-pointer">{listing.eventName}</h1>
+                </Link>
                 <div className="flex flex-wrap gap-4 text-slate-600">
                   <div className="flex items-center gap-2">
                     <Calendar className="size-4" />
