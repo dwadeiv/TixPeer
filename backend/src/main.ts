@@ -3,7 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AppDataSource } from './database/data-source';
-import { seedDatabase } from './database/seeds/seed';
+import { seed } from './database/seeds/seed';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -45,7 +45,7 @@ async function bootstrap() {
     try {
       console.log('\n🌱 Starting database seed...');
       const dataSource = await AppDataSource.initialize();
-      await seedDatabase(dataSource);
+      await seed(dataSource);
       await dataSource.destroy();
     } catch (error) {
       console.error('❌ Seeding failed:', error);

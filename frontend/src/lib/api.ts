@@ -34,9 +34,11 @@ class ApiClient {
         if (error.response?.status === 401) {
           // Handle unauthorized access
           this.removeToken();
-          if (typeof window !== 'undefined') {
-            window.location.href = '/login';
-          }
+          // Note: Redirect to login disabled since login page doesn't exist yet
+          // Unauthenticated users can still browse public content
+          // if (typeof window !== 'undefined') {
+          //   window.location.href = '/login';
+          // }
         }
         return Promise.reject(error);
       }

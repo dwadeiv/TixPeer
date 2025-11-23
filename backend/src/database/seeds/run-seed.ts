@@ -1,5 +1,5 @@
 import { AppDataSource } from '../data-source';
-import { seedDatabase } from './seed';
+import { seed } from './seed';
 
 async function runSeed() {
   console.log('🌱 Starting database seed...\n');
@@ -10,7 +10,7 @@ async function runSeed() {
     console.log('✅ Database connection established\n');
 
     // Run the seeding
-    await seedDatabase(AppDataSource);
+    await seed(AppDataSource);
 
     console.log('\n✅ Seeding completed successfully!');
   } catch (error) {
