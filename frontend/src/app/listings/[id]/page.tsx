@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
@@ -10,14 +10,35 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Calendar, MapPin, Star, Flag, Share2, Send } from 'lucide-react';
-import { mockListings, currentUser } from '@/utils/mockData';
+import { mockListings, currentUser, mockEvents } from '@/utils/mockData';
+import { generateListingsForEvent } from '@/utils/generateListings';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 import { Message } from '@/types';
 
 export default function ListingDetail() {
   const params = useParams();
   const router = useRouter();
-  const listing = mockListings.find(l => l.id === params.id);
+
+  // Try to find listing in mockListings first, or generate it from event
+  const listing = useMemo(() => {
+    const listingId = params.id as string;
+
+    // Check mockListings first
+    let found = mockListings.find(l => l.id === listingId);
+    if (found) return found;
+
+    // If not found, try to generate from event ID (format: eventId-listingNumber)
+    const eventId = listingId.split('-').slice(0, -1).join('-');
+    const event = mockEvents.find(e => e.id === eventId);
+
+    if (event) {
+      const generatedListings = generateListingsForEvent(event);
+      found = generatedListings.find(l => l.id === listingId);
+      if (found) return found;
+    }
+
+    return null;
+  }, [params.id]);
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -83,7 +104,9 @@ export default function ListingDetail() {
                 >
                   {listing.type === 'offer' ? 'Offering' : 'Requesting'} {listing.ticketCount} ticket{listing.ticketCount > 1 ? 's' : ''}
                 </Badge>
-                <h1 className="text-3xl">{listing.eventName}</h1>
+                <Link href={`/events/${listing.eventId}`}>
+                  <h1 className="text-3xl hover:text-purple-600 transition-colors cursor-pointer">{listing.eventName}</h1>
+                </Link>
                 <div className="flex flex-wrap gap-4 text-slate-600">
                   <div className="flex items-center gap-2">
                     <Calendar className="size-4" />
