@@ -115,23 +115,6 @@ export function LocationSelector({
                     </div>
                   </div>
                 </CommandItem>
-                <CommandItem
-                  value="any"
-                  onSelect={() => handleSelect(null)}
-                  className="cursor-pointer border-b"
-                >
-                  <Check
-                    className={cn(
-                      'mr-2 size-4',
-                      selectedCity === null ? 'opacity-100' : 'opacity-0'
-                    )}
-                  />
-                  <MapPin className="mr-2 size-4 text-purple-600" />
-                  <div>
-                    <div className="font-medium">Any Location</div>
-                    <div className="text-xs text-slate-500">Show events from all cities</div>
-                  </div>
-                </CommandItem>
               </CommandGroup>
               <CommandGroup heading="Popular Cities">
                 {popularCities.map((city) => (
@@ -187,7 +170,7 @@ export function LocationSelector({
             <p className="flex items-start gap-2">
               <span>💡</span>
               <span>
-                Your location helps us show you relevant events and connect you with local traders
+                Your location helps us show you relevant events and connect you with local peers
               </span>
             </p>
           </div>

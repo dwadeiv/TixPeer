@@ -99,7 +99,8 @@ const bios = [
 const sections = ['Section 101', 'Section 102', 'Section 103', 'Section 104', 'Section 105', 'Section 201', 'Section 202', 'Section 203', 'Floor A', 'Floor B', 'Floor C', 'VIP', 'Lower Bowl', 'Upper Bowl'];
 const rows = ['Row 1', 'Row 2', 'Row 3', 'Row 4', 'Row 5', 'Row 10', 'Row 15', 'Row 20', 'Row 25'];
 
-const descriptions = [
+// Descriptions for "offer" listings (people selling/trading tickets they have)
+const offerDescriptions = [
   'Have extra tickets and looking to trade or sell. Great seats!',
   'Can\'t make it to this event anymore. Hoping to trade for another date.',
   'Amazing seats! Willing to trade for similar value tickets.',
@@ -110,6 +111,20 @@ const descriptions = [
   'Premium seats, willing to negotiate.',
   'Last minute cancellation, need to sell ASAP.',
   'Perfect seats for this show! Don\'t miss out.',
+];
+
+// Descriptions for "request" listings (people looking to buy tickets)
+const requestDescriptions = [
+  'Looking to buy tickets for this show! Any section works.',
+  'Missed the sale and really want to go. Please help!',
+  'Need tickets for my group. Flexible on location.',
+  'Willing to pay fair price for good seats.',
+  'Looking for last minute tickets. Open to any offers!',
+  'Want to surprise my partner with tickets! Any section appreciated.',
+  'Really want to attend this event. Reasonable offers welcome.',
+  'Searching for tickets at a fair price. Message me!',
+  'Need tickets urgently. Will pay promptly!',
+  'Big fan and missed the sale. Looking to buy!',
 ];
 
 const lookingForOptions = [
@@ -283,6 +298,9 @@ function generateListingsForEvent(event: any, count: number, userIds: string[]) 
     const ticketCount = Math.floor(Math.random() * 4) + 1; // 1-4 tickets per listing
     const userId = userIds[Math.floor(Math.random() * userIds.length)];
 
+    // Use appropriate descriptions based on listing type
+    const descriptionsArray = type === 'offer' ? offerDescriptions : requestDescriptions;
+
     const listing: any = {
       eventId: event.id,
       userId,
@@ -293,7 +311,7 @@ function generateListingsForEvent(event: any, count: number, userIds: string[]) 
       eventDate: event.date,
       eventVenue: event.venue,
       eventImage: event.image,
-      description: descriptions[Math.floor(Math.random() * descriptions.length)],
+      description: descriptionsArray[Math.floor(Math.random() * descriptionsArray.length)],
       lookingFor: lookingForOptions[Math.floor(Math.random() * lookingForOptions.length)],
       status: 'active' as const,
     };
