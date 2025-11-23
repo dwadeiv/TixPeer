@@ -31,6 +31,34 @@ export class User {
   @Column({ default: true })
   isActive: boolean;
 
+  // Profile fields
+  @Column({ nullable: true })
+  avatar: string;
+
+  @Column({ type: 'decimal', precision: 3, scale: 1, default: 0 })
+  trustScore: number;
+
+  @Column({ default: 0 })
+  completedTrades: number;
+
+  @Column({ type: 'text', nullable: true })
+  bio: string;
+
+  @Column({ nullable: true })
+  location: string;
+
+  @Column({ type: 'simple-array', nullable: true })
+  favoriteEvents: string[];
+
+  @Column({ type: 'simple-array', nullable: true })
+  badges: string[];
+
+  @Column({ nullable: true })
+  responseTime: string;
+
+  @Column({ default: false })
+  verifiedUser: boolean;
+
   @OneToMany(() => Ticket, (ticket) => ticket.seller)
   ticketsForSale: Ticket[];
 
