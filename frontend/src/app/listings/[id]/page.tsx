@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
@@ -10,34 +10,43 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Calendar, MapPin, Star, Flag, Share2, Send } from 'lucide-react';
-import { mockListings, currentUser, mockEvents } from '@/utils/mockData';
-import { generateListingsForEvent } from '@/utils/generateListings';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
-import { Message } from '@/types';
+import { api } from '@/lib/api';
+import { Listing, Message } from '@/types';
 
 export default function ListingDetail() {
   const params = useParams();
   const router = useRouter();
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Try to find listing in mockListings first, or generate it from event
-  const listing = useMemo(() => {
-    const listingId = params.id as string;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const listingId = params.id as string;
 
-    // Check mockListings first
-    let found = mockListings.find(l => l.id === listingId);
-    if (found) return found;
+        // Fetch listing data
+        const listingData = await api.getListing(listingId);
+        setListing(listingData);
 
-    // If not found, try to generate from event ID (format: eventId-listingNumber)
-    const eventId = listingId.split('-').slice(0, -1).join('-');
-    const event = mockEvents.find(e => e.id === eventId);
+        // Try to fetch current user profile (optional, for messaging feature)
+        try {
+          const userData = await api.getProfile();
+          setCurrentUser(userData);
+        } catch (error) {
+          // User not logged in - that's okay, they can still view the listing
+          setCurrentUser(null);
+        }
+      } catch (error) {
+        console.error('Error fetching listing:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (event) {
-      const generatedListings = generateListingsForEvent(event);
-      found = generatedListings.find(l => l.id === listingId);
-      if (found) return found;
-    }
-
-    return null;
+    fetchData();
   }, [params.id]);
 
   const [messages, setMessages] = useState<Message[]>([
@@ -50,13 +59,21 @@ export default function ListingDetail() {
   ]);
   const [newMessage, setNewMessage] = useState('');
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-slate-600">Loading...</p>
+      </div>
+    );
+  }
+
   if (!listing) {
     return <div>Listing not found</div>;
   }
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !currentUser) return;
 
     const message: Message = {
       id: Date.now().toString(),
@@ -205,7 +222,7 @@ export default function ListingDetail() {
             {/* Messages */}
             <div className="space-y-4 mb-4 max-h-96 overflow-y-auto">
               {messages.map((message) => {
-                const isCurrentUser = message.senderId === currentUser.id;
+                const isCurrentUser = currentUser && message.senderId === currentUser.id;
                 const sender = isCurrentUser ? currentUser : listing.user;
 
                 return (

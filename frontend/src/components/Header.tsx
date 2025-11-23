@@ -8,7 +8,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { LocationSelector } from './LocationSelector';
 import { useLocation } from '@/contexts/LocationContext';
-import { mockEvents } from '@/utils/mockData';
+import { api } from '@/lib/api';
 import { Card } from './ui/card';
 
 export default function Header() {
@@ -19,7 +19,22 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [events, setEvents] = useState<any[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // Fetch events when component mounts
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const eventsData = await api.getEvents();
+        setEvents(eventsData);
+      } catch (error) {
+        console.error('Error fetching events for search:', error);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   const isActive = (path: string) => {
     return pathname === path;
@@ -46,7 +61,7 @@ export default function Header() {
   const getSuggestions = () => {
     if (!searchQuery.trim()) return [];
 
-    const filtered = mockEvents.filter(event =>
+    const filtered = events.filter(event =>
       event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.venue.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.category.toLowerCase().includes(searchQuery.toLowerCase())

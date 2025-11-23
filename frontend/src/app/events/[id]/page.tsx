@@ -9,23 +9,45 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Calendar, MapPin, Users, MessageSquare, Star } from 'lucide-react';
-import { mockEvents } from '@/utils/mockData';
-import { generateListingsForEvent } from '@/utils/generateListings';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
-import { Listing } from '@/types';
+import { api } from '@/lib/api';
+import { Event, Listing } from '@/types';
 
 export default function EventDetail() {
   const params = useParams();
   const router = useRouter();
-  const event = mockEvents.find(e => e.id === params.id);
+  const [event, setEvent] = useState<Event | null>(null);
   const [eventListings, setEventListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (event) {
-      const listings = generateListingsForEvent(event);
-      setEventListings(listings);
-    }
-  }, [event]);
+    const fetchEventData = async () => {
+      try {
+        setLoading(true);
+        const eventId = params.id as string;
+        const [eventData, listingsData] = await Promise.all([
+          api.getEvent(eventId),
+          api.getListings({ eventId })
+        ]);
+        setEvent(eventData);
+        setEventListings(listingsData);
+      } catch (error) {
+        console.error('Error fetching event data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEventData();
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-slate-600">Loading...</p>
+      </div>
+    );
+  }
 
   if (!event) {
     return <div>Event not found</div>;

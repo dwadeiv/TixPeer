@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,18 +9,43 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Calendar, MapPin, MessageSquare, Star, ArrowRight, Search as SearchIcon } from 'lucide-react';
-import { mockListings, mockEvents } from '@/utils/mockData';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 import { useLocation } from '@/contexts/LocationContext';
+import { api } from '@/lib/api';
+import { Event, Listing } from '@/types';
 
 export default function Home() {
   const [filter, setFilter] = useState<'all' | 'offer' | 'request'>('all');
+  const [events, setEvents] = useState<Event[]>([]);
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
   const { location } = useLocation();
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
 
+  // Fetch events and listings from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [eventsData, listingsData] = await Promise.all([
+          api.getEvents(),
+          api.getListings()
+        ]);
+        setEvents(eventsData);
+        setListings(listingsData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   // Filter events by search query first
-  let filteredEvents = mockEvents;
+  let filteredEvents = events;
   if (searchQuery) {
     filteredEvents = filteredEvents.filter(event =>
       event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -36,9 +61,17 @@ export default function Home() {
 
   const locationFilteredEvents = filteredEvents;
 
-  const filteredListings = mockListings.filter(
+  const filteredListings = listings.filter(
     listing => filter === 'all' || listing.type === filter
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-slate-600">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-20 md:pb-8">
