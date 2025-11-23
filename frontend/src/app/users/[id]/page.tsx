@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
@@ -7,18 +8,46 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, Calendar, MapPin, Star, CheckCircle, Clock, Mail } from 'lucide-react';
-import { mockUsers, mockListings, currentUser } from '@/utils/mockData';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
+import { api } from '@/lib/api';
+import { User, Listing } from '@/types';
 
 export default function UserProfile() {
   const params = useParams();
   const router = useRouter();
   const userId = params.id as string;
+  const [user, setUser] = useState<User | null>(null);
+  const [userListings, setUserListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Find user in mockUsers or use currentUser if it's their profile
-  const user = userId === currentUser.id
-    ? currentUser
-    : mockUsers.find(u => u.id === userId);
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        const [userData, listingsData] = await Promise.all([
+          api.getUser(userId),
+          api.getListings({ userId })
+        ]);
+        setUser(userData);
+        // Filter for active listings
+        setUserListings(listingsData.filter((listing: Listing) => listing.status === 'active'));
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [userId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-slate-600">Loading...</p>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -37,11 +66,6 @@ export default function UserProfile() {
       </div>
     );
   }
-
-  // Get user's active listings
-  const userListings = mockListings.filter(
-    listing => listing.userId === userId && listing.status === 'active'
-  );
 
   return (
     <div className="pb-20 md:pb-8">
@@ -105,12 +129,10 @@ export default function UserProfile() {
                 </div>
               </div>
 
-              {userId !== currentUser.id && (
-                <Button className="w-full gap-2">
-                  <Mail className="size-4" />
-                  Send Message
-                </Button>
-              )}
+              <Button className="w-full gap-2">
+                <Mail className="size-4" />
+                Send Message
+              </Button>
             </div>
           </Card>
 

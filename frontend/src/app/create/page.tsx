@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Upload } from 'lucide-react';
-import { mockEvents } from '@/utils/mockData';
+import { api } from '@/lib/api';
 
 export default function CreateListing() {
   const router = useRouter();
@@ -23,6 +23,24 @@ export default function CreateListing() {
   const [sectionInfo, setSectionInfo] = useState('');
   const [description, setDescription] = useState('');
   const [lookingFor, setLookingFor] = useState('');
+  const [events, setEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        const eventsData = await api.getEvents();
+        setEvents(eventsData);
+      } catch (error) {
+        console.error('Error fetching events:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +95,7 @@ export default function CreateListing() {
                 <SelectValue placeholder="Select an event" />
               </SelectTrigger>
               <SelectContent>
-                {mockEvents.map(event => (
+                {events.map(event => (
                   <SelectItem key={event.id} value={event.id}>
                     {event.name} - {new Date(event.date).toLocaleDateString()}
                   </SelectItem>
