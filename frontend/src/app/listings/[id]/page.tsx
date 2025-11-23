@@ -27,16 +27,20 @@ export default function ListingDetail() {
         setLoading(true);
         const listingId = params.id as string;
 
-        // Fetch listing and current user profile in parallel
-        const [listingData, userData] = await Promise.all([
-          api.getListing(listingId),
-          api.getProfile().catch(() => null) // Handle case where user is not logged in
-        ]);
-
+        // Fetch listing data
+        const listingData = await api.getListing(listingId);
         setListing(listingData);
-        setCurrentUser(userData);
+
+        // Try to fetch current user profile (optional, for messaging feature)
+        try {
+          const userData = await api.getProfile();
+          setCurrentUser(userData);
+        } catch (error) {
+          // User not logged in - that's okay, they can still view the listing
+          setCurrentUser(null);
+        }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching listing:', error);
       } finally {
         setLoading(false);
       }
