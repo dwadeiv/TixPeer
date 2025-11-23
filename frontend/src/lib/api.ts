@@ -81,7 +81,7 @@ class ApiClient {
    */
   private getToken(): string | null {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('auth_token');
+      return localStorage.getItem('authToken');
     }
     return null;
   }
@@ -91,17 +91,22 @@ class ApiClient {
    */
   private removeToken(): void {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem('authToken');
     }
   }
 
   /**
    * Stores JWT token after successful login
    * Token will be automatically attached to all subsequent requests
+   * Pass null to clear the token (logout)
    */
-  setToken(token: string): void {
+  setToken(token: string | null): void {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_token', token);
+      if (token) {
+        localStorage.setItem('authToken', token);
+      } else {
+        this.removeToken();
+      }
     }
   }
 
@@ -132,6 +137,15 @@ class ApiClient {
    */
   async logout() {
     this.removeToken();
+  }
+
+  /**
+   * Resends email verification link to user's email address
+   * @param email - Email address to send verification link to
+   */
+  async resendVerificationEmail(email: string) {
+    const response = await this.client.post('/auth/resend-verification', { email });
+    return response.data;
   }
 
   // ========== Legacy Tickets Endpoints (Deprecated - Use Listings Instead) ==========
