@@ -44,6 +44,27 @@ export class User {
   @Column({ default: true })
   isActive: boolean;
 
+  // ========== Email Verification Fields ==========
+
+  /** Whether the user's email address has been verified */
+  @Column({ default: false })
+  isEmailVerified: boolean;
+
+  /**
+   * Token sent via email for email verification
+   * Cleared after successful verification
+   */
+  @Column({ nullable: true })
+  @Exclude()
+  emailVerificationToken: string;
+
+  /**
+   * Expiry time for email verification token (24 hours from generation)
+   * Prevents use of old/leaked tokens
+   */
+  @Column({ nullable: true })
+  emailVerificationTokenExpiry: Date;
+
   // ========== Profile & Trust System Fields ==========
 
   /** Profile picture URL (typically from avatar service or upload) */

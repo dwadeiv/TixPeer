@@ -8,6 +8,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { LocationSelector } from './LocationSelector';
 import { useLocation } from '@/contexts/LocationContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import { Card } from './ui/card';
 
@@ -15,6 +16,7 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const { location, setLocation } = useLocation();
+  const { isAuthenticated } = useAuth();
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -211,7 +213,8 @@ export default function Header() {
                   <span className="hidden sm:inline">New Listing</span>
                 </Button>
               </Link>
-              <Link href="/profile">
+              {/* Profile button - redirects to login if not authenticated */}
+              <Link href={isAuthenticated ? "/profile" : "/login"}>
                 <Button variant="ghost" size="icon">
                   <User className="size-5" />
                 </Button>
@@ -259,10 +262,11 @@ export default function Header() {
               </div>
             </button>
           </Link>
-          <Link href="/profile" className="flex-1">
+          {/* Profile button - redirects to login if not authenticated */}
+          <Link href={isAuthenticated ? "/profile" : "/login"} className="flex-1">
             <button
               className={`flex flex-col items-center justify-center w-full h-full gap-1 ${
-                isActive('/profile') ? 'text-purple-600' : 'text-slate-600'
+                isActive('/profile') || isActive('/login') ? 'text-purple-600' : 'text-slate-600'
               }`}
             >
               <User className="size-5" />
