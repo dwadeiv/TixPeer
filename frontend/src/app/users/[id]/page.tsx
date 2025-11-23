@@ -132,17 +132,17 @@ export default function UserProfile() {
             </Card>
           )}
 
-          {/* Favorite Genres */}
-          {user.favoriteGenres && user.favoriteGenres.length > 0 && (
+          {/* Favorite Events */}
+          {user.favoriteEvents && user.favoriteEvents.length > 0 && (
             <Card className="p-6">
-              <h3 className="mb-4">Favorite Genres</h3>
+              <h3 className="mb-4">Favorite Events</h3>
               <div className="flex flex-wrap gap-2">
-                {user.favoriteGenres.map((genre, index) => (
+                {user.favoriteEvents.map((event, index) => (
                   <Badge
                     key={index}
                     variant="outline"
                   >
-                    {genre}
+                    {event}
                   </Badge>
                 ))}
               </div>
