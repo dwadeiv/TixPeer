@@ -51,6 +51,21 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
      }
      ```
 
+5. **Maintain Comments as Code Evolves**
+   - When modifying code, ALWAYS update or remove related comments
+   - Delete comments that no longer apply to the current implementation
+   - Add new comments when introducing new logic or complexity
+   - NEVER leave deprecated/outdated comments in the codebase
+   - Comments that contradict the code are worse than no comments
+   - During refactoring, treat comments as part of the code to be refactored
+   - Examples of what to do:
+     - ✅ Remove comment when deleting a function
+     - ✅ Update JSDoc when changing function parameters
+     - ✅ Remove "TODO" comments after completing the task
+     - ✅ Update explanation when changing business logic
+     - ❌ Leave comment saying "fetches users" when code now fetches events
+     - ❌ Keep comment about "pagination" after removing pagination feature
+
 ## Technology Stack
 
 - **Frontend**: Next.js 14+ with TypeScript, App Router, Tailwind CSS
