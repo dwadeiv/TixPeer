@@ -66,6 +66,20 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
      - ❌ Leave comment saying "fetches users" when code now fetches events
      - ❌ Keep comment about "pagination" after removing pagination feature
 
+6. **Documentation Updates Require Approval**
+   - When development changes warrant updates to existing documentation files (CLAUDE.md, CACHING.md, etc.)
+   - ALWAYS ask for permission BEFORE updating any documentation
+   - Do NOT automatically update documentation without explicit approval
+   - This ensures proper control over what gets documented and when
+   - Exception: Creating NEW documentation files when explicitly requested
+
+7. **Add New Rules to CLAUDE.md With Permission**
+   - When the user requests a new rule or workflow to follow
+   - ALWAYS ask for permission before adding the rule to CLAUDE.md
+   - Once approved, add it to this CLAUDE.md file under the appropriate section
+   - This ensures rules are permanently documented and consistently followed across sessions
+   - Format rules clearly with bullet points explaining what to do and why
+
 ## Technology Stack
 
 - **Frontend**: Next.js 14+ with TypeScript, App Router, Tailwind CSS
