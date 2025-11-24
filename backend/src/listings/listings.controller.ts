@@ -31,16 +31,17 @@ export class ListingsController {
 
   /**
    * Get all listings endpoint
-   * No caching to ensure users see new listings immediately
-   * Critical for marketplace UX - listings should appear/update in real-time
+   *
+   * Cache Strategy:
+   * - Public cache for 30 seconds (active marketplace with frequent updates)
+   * - stale-while-revalidate=300 for better UX when listings change
+   * - Balances marketplace freshness with performance
    */
   @Get()
   @ApiOperation({ summary: 'Get all listings' })
   @ApiQuery({ name: 'eventId', required: false })
   @ApiQuery({ name: 'userId', required: false })
-  @Header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
-  @Header('Pragma', 'no-cache')
-  @Header('Expires', '0')
+  @Header('Cache-Control', 'public, max-age=30, stale-while-revalidate=300')
   findAll(
     @Query('eventId') eventId?: string,
     @Query('userId') userId?: string,
@@ -56,14 +57,15 @@ export class ListingsController {
 
   /**
    * Get single listing endpoint
-   * No caching to ensure listing status and details are always current
+   *
+   * Cache Strategy:
+   * - Public cache for 30 seconds (listing details may change as users interact)
+   * - stale-while-revalidate=300 for better UX
    */
   @Get(':id')
   @ApiOperation({ summary: 'Get listing by ID' })
   @ApiParam({ name: 'id', description: 'Listing ID' })
-  @Header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
-  @Header('Pragma', 'no-cache')
-  @Header('Expires', '0')
+  @Header('Cache-Control', 'public, max-age=30, stale-while-revalidate=300')
   findOne(@Param('id') id: string): Promise<Listing | null> {
     return this.listingsService.findOne(id);
   }
