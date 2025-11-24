@@ -122,6 +122,10 @@ export function LocationSelector({
                     key={city.label}
                     value={city.label}
                     onSelect={() => handleSelect(city)}
+                    onDoubleClick={() => {
+                      onLocationSelect(city);
+                      onOpenChange(false);
+                    }}
                     className="cursor-pointer"
                   >
                     <Check
