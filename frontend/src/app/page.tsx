@@ -32,6 +32,7 @@ export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Date filtering state - allows users to filter events by time period
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month' | 'custom'>('all');
@@ -47,21 +48,34 @@ export default function Home() {
   /**
    * Fetch all events and listings on mount
    * Uses Promise.all to make parallel API requests for faster loading
+   * Includes timeout protection to prevent indefinite loading states
    * This is critical for good UX - users see all data at once
    */
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError(null);
+
+        // Add 5 second timeout to prevent indefinite loading
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Request timeout - server may be starting up')), 5000)
+        );
+
         // Parallel fetching - much faster than sequential API calls
-        const [eventsData, listingsData] = await Promise.all([
+        const dataPromise = Promise.all([
           api.getEvents(),
           api.getListings()
         ]);
+
+        // Race between data fetch and timeout
+        const [eventsData, listingsData] = await Promise.race([dataPromise, timeoutPromise]) as [any, any];
+
         setEvents(eventsData);
         setListings(listingsData);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching data:', error);
+        setError(error.message || 'Failed to load data. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -109,6 +123,17 @@ export default function Home() {
    *
    * This order matters: searching "Taylor Swift" in "Los Angeles" should
    * show all Taylor Swift events in LA, not LA events matching "Taylor Swift"
+   *
+   * TODO: Future Enhancement - Personalized Recommendation Algorithm
+   * Currently sorted by popularity (activeListings count) as a proxy for demand.
+   * Plan to implement ML-based personalization that considers:
+   * - User's past event views and ticket requests
+   * - User's genre/category preferences
+   * - Social graph (events friends are attending)
+   * - Time-based patterns (weekday vs weekend preferences)
+   * - Price sensitivity based on past listing interactions
+   * - Geographic preferences (how far user typically travels)
+   * This will provide each user a personalized feed of suggested events
    */
   let filteredEvents = events;
 
@@ -160,10 +185,50 @@ export default function Home() {
     return matchesLocation && matchesType;
   });
 
+  /**
+   * Retry function to allow users to manually reload data if initial fetch fails
+   */
+  const retryFetch = () => {
+    window.location.reload();
+  };
+
+  /**
+   * Error State
+   * Shown when API requests fail or timeout
+   * Provides clear message and retry option
+   */
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <div className="bg-red-100 p-4 rounded-full">
+          <svg className="size-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-semibold mb-2">Unable to Load Data</h2>
+          <p className="text-slate-600 mb-4">{error}</p>
+          <Button onClick={retryFetch} className="gap-2">
+            <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  /**
+   * Loading State
+   * Shows spinner for seamless loading experience
+   * Centered layout maintains visual stability during page load
+   */
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-slate-600">Loading...</p>
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <p className="text-slate-600 text-sm">Loading events and listings...</p>
       </div>
     );
   }
@@ -291,7 +356,10 @@ export default function Home() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {locationFilteredEvents.map(event => (
+            {/* Sort events by popularity (activeListings) - higher count = more marketplace activity */}
+            {locationFilteredEvents
+              .sort((a, b) => b.activeListings - a.activeListings)
+              .map(event => (
             <Link key={event.id} href={`/events/${event.id}`}>
               <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
                 <div className="aspect-video relative">
