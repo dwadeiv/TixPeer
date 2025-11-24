@@ -3,13 +3,14 @@
  * Generates realistic test data for TixPeer marketplace development.
  *
  * Data Generated:
- * - 100 users with varied profiles, trust scores, and trading history
- * - 55 events across major US cities (concerts, sports, theater, festivals)
- * - 1,900+ listings (offers and requests) distributed across events
+ * - 150 users with varied profiles, trust scores, and trading history
+ * - 110+ events across major US cities spanning all of 2025 (concerts, sports, theater, festivals)
+ * - 3,000+ listings (offers and requests) distributed across events
  *
  * Purpose:
  * - Provides realistic data for frontend development and testing
  * - Demonstrates marketplace at scale with meaningful user interactions
+ * - Events spread throughout 2025 for testing date filtering functionality
  * - Uses deterministic data generation (no random libraries like Faker)
  * - Can be run multiple times safely (clears existing test data first)
  *
@@ -177,8 +178,8 @@ function generateUser(index: number) {
   };
 }
 
-// Generate 100 users for active marketplace simulation
-const mockUsers = Array.from({ length: 100 }, (_, i) => generateUser(i));
+// Generate 150 users for active marketplace simulation (increased from 100)
+const mockUsers = Array.from({ length: 150 }, (_, i) => generateUser(i));
 
 /**
  * Event Data - 55 Real-World Events
@@ -272,6 +273,68 @@ const mockEvents = [
   { id: 'sj2', name: 'Electric Daisy Carnival', date: '2025-05-16', venue: 'Las Vegas Motor Speedway', location: 'Las Vegas, NV', city: 'Las Vegas', image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&h=400&fit=crop', category: 'Festival', activeListings: 312 },
   { id: 'aus1', name: 'Austin City Limits', date: '2025-10-03', venue: 'Zilker Park', location: 'Austin, TX', city: 'Austin', image: 'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=800&h=400&fit=crop', category: 'Festival', activeListings: 245 },
   { id: 'aus2', name: 'Coachella Valley Music Festival', date: '2025-04-11', venue: 'Empire Polo Club', location: 'Indio, CA', city: 'Los Angeles', image: 'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=800&h=400&fit=crop', category: 'Festival', activeListings: 389 },
+
+  // Additional events with varied dates throughout 2025
+  // January 2025 Events
+  { id: 'post1', name: 'Post Malone - Big Ass Stadium Tour', date: '2025-01-20', venue: 'Climate Pledge Arena', location: 'Seattle, WA', city: 'Seattle', image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&h=400&fit=crop', category: 'Music', activeListings: 143 },
+  { id: 'post2', name: 'Post Malone - Big Ass Stadium Tour', date: '2025-01-25', venue: 'Moda Center', location: 'Portland, OR', city: 'Portland', image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&h=400&fit=crop', category: 'Music', activeListings: 128 },
+  { id: 'nba13', name: 'Lakers vs Celtics', date: '2025-01-22', venue: 'Crypto.com Arena', location: 'Los Angeles, CA', city: 'Los Angeles', image: 'https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=800&h=400&fit=crop', category: 'Sports', activeListings: 97 },
+  { id: 'nba14', name: 'Warriors vs Suns', date: '2025-01-26', venue: 'Chase Center', location: 'San Francisco, CA', city: 'San Francisco', image: 'https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=800&h=400&fit=crop', category: 'Sports', activeListings: 84 },
+
+  // February 2025 Events
+  { id: 'sza1', name: 'SZA - SOS Tour', date: '2025-02-05', venue: 'Barclays Center', location: 'New York, NY', city: 'New York', image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&h=400&fit=crop', category: 'Music', activeListings: 156 },
+  { id: 'sza2', name: 'SZA - SOS Tour', date: '2025-02-10', venue: 'United Center', location: 'Chicago, IL', city: 'Chicago', image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&h=400&fit=crop', category: 'Music', activeListings: 132 },
+  { id: 'bruno1', name: 'Bruno Mars - An Evening with Silk Sonic', date: '2025-02-14', venue: 'MGM Grand Garden', location: 'Las Vegas, NV', city: 'Las Vegas', image: 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=800&h=400&fit=crop', category: 'Music', activeListings: 198 },
+  { id: 'nba15', name: 'NBA All-Star Game', date: '2025-02-16', venue: 'Chase Center', location: 'San Francisco, CA', city: 'San Francisco', image: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&h=400&fit=crop', category: 'Sports', activeListings: 276 },
+  { id: 'nhl3', name: 'NHL Stadium Series', date: '2025-02-22', venue: 'Lincoln Financial Field', location: 'Philadelphia, PA', city: 'Philadelphia', image: 'https://images.unsplash.com/photo-1515703407324-5f753afd8be8?w=800&h=400&fit=crop', category: 'Sports', activeListings: 112 },
+  { id: 'billie1', name: 'Billie Eilish - Hit Me Hard and Soft Tour', date: '2025-02-28', venue: 'Staples Center', location: 'Los Angeles, CA', city: 'Los Angeles', image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=400&fit=crop', category: 'Music', activeListings: 189 },
+
+  // March 2025 Events
+  { id: 'ncaa1', name: 'March Madness - Sweet 16', date: '2025-03-22', venue: 'AT&T Center', location: 'San Antonio, TX', city: 'San Antonio', image: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&h=400&fit=crop', category: 'Sports', activeListings: 167 },
+  { id: 'ncaa2', name: 'March Madness - Elite Eight', date: '2025-03-29', venue: 'United Center', location: 'Chicago, IL', city: 'Chicago', image: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&h=400&fit=crop', category: 'Sports', activeListings: 198 },
+  { id: 'travis1', name: 'Travis Scott - Utopia Tour', date: '2025-03-15', venue: 'American Airlines Arena', location: 'Miami, FL', city: 'Miami', image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&h=400&fit=crop', category: 'Music', activeListings: 213 },
+  { id: 'travis2', name: 'Travis Scott - Utopia Tour', date: '2025-03-20', venue: 'State Farm Arena', location: 'Atlanta, GA', city: 'Atlanta', image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&h=400&fit=crop', category: 'Music', activeListings: 194 },
+  { id: 'wicked1', name: 'Wicked', date: '2025-03-08', venue: 'Pantages Theatre', location: 'Los Angeles, CA', city: 'Los Angeles', image: 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?w=800&h=400&fit=crop', category: 'Theater', activeListings: 142 },
+
+  // May 2025 Events
+  { id: 'kendrick1', name: 'Kendrick Lamar - The Big Steppers Tour', date: '2025-05-03', venue: 'Barclays Center', location: 'New York, NY', city: 'New York', image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=400&fit=crop', category: 'Music', activeListings: 201 },
+  { id: 'kendrick2', name: 'Kendrick Lamar - The Big Steppers Tour', date: '2025-05-08', venue: 'Wells Fargo Center', location: 'Philadelphia, PA', city: 'Philadelphia', image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=400&fit=crop', category: 'Music', activeListings: 173 },
+  { id: 'mlb1', name: 'Yankees vs Red Sox', date: '2025-05-24', venue: 'Yankee Stadium', location: 'New York, NY', city: 'New York', image: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=800&h=400&fit=crop', category: 'Sports', activeListings: 123 },
+  { id: 'mlb2', name: 'Dodgers vs Giants', date: '2025-05-30', venue: 'Dodger Stadium', location: 'Los Angeles, CA', city: 'Los Angeles', image: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=800&h=400&fit=crop', category: 'Sports', activeListings: 109 },
+
+  // June 2025 Events
+  { id: 'imagine1', name: 'Imagine Dragons - Loom World Tour', date: '2025-06-06', venue: 'T-Mobile Arena', location: 'Las Vegas, NV', city: 'Las Vegas', image: 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=800&h=400&fit=crop', category: 'Music', activeListings: 147 },
+  { id: 'imagine2', name: 'Imagine Dragons - Loom World Tour', date: '2025-06-14', venue: 'Ball Arena', location: 'Denver, CO', city: 'Denver', image: 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=800&h=400&fit=crop', category: 'Music', activeListings: 128 },
+  { id: 'mlb3', name: 'Cubs vs Cardinals', date: '2025-06-20', venue: 'Wrigley Field', location: 'Chicago, IL', city: 'Chicago', image: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=800&h=400&fit=crop', category: 'Sports', activeListings: 94 },
+  { id: 'mlb4', name: 'Red Sox vs Yankees', date: '2025-06-28', venue: 'Fenway Park', location: 'Boston, MA', city: 'Boston', image: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=800&h=400&fit=crop', category: 'Sports', activeListings: 116 },
+
+  // July 2025 Events
+  { id: 'dua1', name: 'Dua Lipa - Radical Optimism Tour', date: '2025-07-04', venue: 'Madison Square Garden', location: 'New York, NY', city: 'New York', image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&h=400&fit=crop', category: 'Music', activeListings: 176 },
+  { id: 'dua2', name: 'Dua Lipa - Radical Optimism Tour', date: '2025-07-10', venue: 'TD Garden', location: 'Boston, MA', city: 'Boston', image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&h=400&fit=crop', category: 'Music', activeListings: 152 },
+  { id: 'mlb5', name: 'MLB All-Star Game', date: '2025-07-15', venue: 'Globe Life Field', location: 'Dallas, TX', city: 'Dallas', image: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=800&h=400&fit=crop', category: 'Sports', activeListings: 234 },
+  { id: 'sabrina1', name: 'Sabrina Carpenter - Short n\' Sweet Tour', date: '2025-07-22', venue: 'American Airlines Arena', location: 'Miami, FL', city: 'Miami', image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&h=400&fit=crop', category: 'Music', activeListings: 138 },
+  { id: 'sabrina2', name: 'Sabrina Carpenter - Short n\' Sweet Tour', date: '2025-07-28', venue: 'Footprint Center', location: 'Phoenix, AZ', city: 'Phoenix', image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&h=400&fit=crop', category: 'Music', activeListings: 124 },
+
+  // September 2025 Events
+  { id: 'nfl3', name: 'NFL - Cowboys vs Eagles', date: '2025-09-07', venue: 'AT&T Stadium', location: 'Dallas, TX', city: 'Dallas', image: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&h=400&fit=crop', category: 'Sports', activeListings: 156 },
+  { id: 'nfl4', name: 'NFL - 49ers vs Rams', date: '2025-09-14', venue: 'Levi\'s Stadium', location: 'San Francisco, CA', city: 'San Francisco', image: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&h=400&fit=crop', category: 'Sports', activeListings: 143 },
+  { id: 'nfl5', name: 'NFL - Patriots vs Jets', date: '2025-09-21', venue: 'Gillette Stadium', location: 'Boston, MA', city: 'Boston', image: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&h=400&fit=crop', category: 'Sports', activeListings: 132 },
+  { id: 'olivia1', name: 'Olivia Rodrigo - GUTS World Tour', date: '2025-09-18', venue: 'United Center', location: 'Chicago, IL', city: 'Chicago', image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&h=400&fit=crop', category: 'Music', activeListings: 167 },
+  { id: 'olivia2', name: 'Olivia Rodrigo - GUTS World Tour', date: '2025-09-25', venue: 'Little Caesars Arena', location: 'Detroit, MI', city: 'Detroit', image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&h=400&fit=crop', category: 'Music', activeListings: 149 },
+
+  // November 2025 Events
+  { id: 'nfl6', name: 'NFL - Thanksgiving Day Classic', date: '2025-11-27', venue: 'AT&T Stadium', location: 'Dallas, TX', city: 'Dallas', image: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&h=400&fit=crop', category: 'Sports', activeListings: 187 },
+  { id: 'nba16', name: 'Lakers vs Clippers', date: '2025-11-15', venue: 'Crypto.com Arena', location: 'Los Angeles, CA', city: 'Los Angeles', image: 'https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=800&h=400&fit=crop', category: 'Sports', activeListings: 106 },
+  { id: 'nba17', name: 'Knicks vs Heat', date: '2025-11-22', venue: 'Madison Square Garden', location: 'New York, NY', city: 'New York', image: 'https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=800&h=400&fit=crop', category: 'Sports', activeListings: 92 },
+  { id: 'ariana1', name: 'Ariana Grande - Eternal Sunshine Tour', date: '2025-11-08', venue: 'Barclays Center', location: 'New York, NY', city: 'New York', image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&h=400&fit=crop', category: 'Music', activeListings: 234 },
+  { id: 'ariana2', name: 'Ariana Grande - Eternal Sunshine Tour', date: '2025-11-14', venue: 'Wells Fargo Center', location: 'Philadelphia, PA', city: 'Philadelphia', image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&h=400&fit=crop', category: 'Music', activeListings: 207 },
+  { id: 'ariana3', name: 'Ariana Grande - Eternal Sunshine Tour', date: '2025-11-20', venue: 'United Center', location: 'Chicago, IL', city: 'Chicago', image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&h=400&fit=crop', category: 'Music', activeListings: 198 },
+
+  // December 2025 Events
+  { id: 'nutcracker1', name: 'The Nutcracker Ballet', date: '2025-12-10', venue: 'Lincoln Center', location: 'New York, NY', city: 'New York', image: 'https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?w=800&h=400&fit=crop', category: 'Theater', activeListings: 87 },
+  { id: 'nutcracker2', name: 'The Nutcracker Ballet', date: '2025-12-15', venue: 'Lyric Opera House', location: 'Chicago, IL', city: 'Chicago', image: 'https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?w=800&h=400&fit=crop', category: 'Theater', activeListings: 74 },
+  { id: 'nba18', name: 'NBA Christmas Day - Lakers vs Celtics', date: '2025-12-25', venue: 'Crypto.com Arena', location: 'Los Angeles, CA', city: 'Los Angeles', image: 'https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=800&h=400&fit=crop', category: 'Sports', activeListings: 178 },
+  { id: 'nhl4', name: 'NHL - Winter Classic', date: '2025-12-31', venue: 'Wrigley Field', location: 'Chicago, IL', city: 'Chicago', image: 'https://images.unsplash.com/photo-1515703407324-5f753afd8be8?w=800&h=400&fit=crop', category: 'Sports', activeListings: 156 },
 ];
 
 /**
