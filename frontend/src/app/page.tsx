@@ -20,7 +20,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, MapPin, MessageSquare, Star, ArrowRight, Search as SearchIcon } from 'lucide-react';
+import { Calendar, MapPin, MessageSquare, Star, ArrowRight, Search as SearchIcon, CalendarDays, X } from 'lucide-react';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 import { useLocation } from '@/contexts/LocationContext';
 import { api } from '@/lib/api';
@@ -32,6 +32,10 @@ export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Date filtering state - allows users to filter events by time period
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month' | 'custom'>('all');
+  const [customDateRange, setCustomDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
 
   // Location from global context - allows users to filter events by city
   const { location } = useLocation();
@@ -67,10 +71,41 @@ export default function Home() {
   }, []);
 
   /**
+   * Helper function to get date range based on selected filter
+   */
+  const getDateRange = () => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    switch (dateFilter) {
+      case 'today':
+        return {
+          start: today,
+          end: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+        };
+      case 'week':
+        return {
+          start: today,
+          end: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+        };
+      case 'month':
+        return {
+          start: today,
+          end: new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
+        };
+      case 'custom':
+        return customDateRange;
+      default:
+        return { start: null, end: null };
+    }
+  };
+
+  /**
    * Event Filtering Logic
-   * Applied in TWO stages for better UX:
+   * Applied in THREE stages for better UX:
    * 1. Search filter - narrows down by keyword (name/venue/category)
    * 2. Location filter - further narrows by city
+   * 3. Date filter - filters by date range
    *
    * This order matters: searching "Taylor Swift" in "Los Angeles" should
    * show all Taylor Swift events in LA, not LA events matching "Taylor Swift"
@@ -89,6 +124,17 @@ export default function Home() {
   // Stage 2: Filter by location (applies to both search results and general browsing)
   if (location) {
     filteredEvents = filteredEvents.filter(event => event.city === location.name);
+  }
+
+  // Stage 3: Filter by date range
+  const dateRange = getDateRange();
+  if (dateRange.start || dateRange.end) {
+    filteredEvents = filteredEvents.filter(event => {
+      const eventDate = new Date(event.date);
+      if (dateRange.start && eventDate < dateRange.start) return false;
+      if (dateRange.end && eventDate > dateRange.end) return false;
+      return true;
+    });
   }
 
   const locationFilteredEvents = filteredEvents;
@@ -145,6 +191,55 @@ export default function Home() {
           </Link>
         </div>
       </div>
+
+      {/* Date Filter Section */}
+      <section>
+        <div className="flex items-center gap-2 mb-6 flex-wrap">
+          <CalendarDays className="size-5 text-purple-600" />
+          <h3 className="text-lg font-semibold">Filter by Date:</h3>
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              variant={dateFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setDateFilter('all')}
+            >
+              All Dates
+            </Button>
+            <Button
+              variant={dateFilter === 'today' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setDateFilter('today')}
+            >
+              Today
+            </Button>
+            <Button
+              variant={dateFilter === 'week' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setDateFilter('week')}
+            >
+              This Week
+            </Button>
+            <Button
+              variant={dateFilter === 'month' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setDateFilter('month')}
+            >
+              This Month
+            </Button>
+          </div>
+          {dateFilter !== 'all' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDateFilter('all')}
+              className="gap-1"
+            >
+              <X className="size-4" />
+              Clear
+            </Button>
+          )}
+        </div>
+      </section>
 
       {/* Trending Events Section */}
       <section>
@@ -237,9 +332,77 @@ export default function Home() {
         )}
       </section>
 
+      {/* Upcoming Events - Shows next events chronologically */}
+      <section>
+        <h2 className="text-2xl mb-4">Upcoming Events</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Sort events by date and show upcoming ones */}
+          {locationFilteredEvents
+            .filter(event => new Date(event.date) >= new Date())
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+            .slice(0, 6)
+            .map(event => (
+              <Link key={event.id} href={`/events/${event.id}`}>
+                <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+                  <div className="flex gap-4 p-4">
+                    {/* Date badge */}
+                    <div className="flex flex-col items-center justify-center bg-purple-100 rounded-lg px-4 py-3 min-w-[80px]">
+                      <div className="text-3xl font-bold text-purple-900">
+                        {new Date(event.date).getDate()}
+                      </div>
+                      <div className="text-sm text-purple-700 uppercase">
+                        {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
+                      </div>
+                      <div className="text-xs text-purple-600">
+                        {new Date(event.date).getFullYear()}
+                      </div>
+                    </div>
+
+                    {/* Event details */}
+                    <div className="flex-1 min-w-0">
+                      <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 mb-2">
+                        {event.category}
+                      </Badge>
+                      <h3 className="font-semibold line-clamp-1 mb-1">{event.name}</h3>
+                      <div className="flex items-center gap-1 text-sm text-slate-600 mb-1">
+                        <MapPin className="size-3" />
+                        <span className="line-clamp-1">{event.venue}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm text-slate-600">
+                        <MessageSquare className="size-3" />
+                        <span>{event.activeListings} active listing{event.activeListings !== 1 ? 's' : ''}</span>
+                      </div>
+                    </div>
+
+                    {/* Event image thumbnail */}
+                    <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                      <ImageWithFallback
+                        src={event.image}
+                        alt={event.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+            ))}
+        </div>
+
+        {/* Show message if no upcoming events */}
+        {locationFilteredEvents.filter(event => new Date(event.date) >= new Date()).length === 0 && (
+          <Card className="p-12 text-center">
+            <CalendarDays className="size-12 mx-auto mb-4 text-slate-400" />
+            <p className="text-slate-600 mb-2">No upcoming events found</p>
+            <p className="text-sm text-slate-500">
+              {dateFilter !== 'all' ? 'Try adjusting your date filter' : 'Check back later for new events'}
+            </p>
+          </Card>
+        )}
+      </section>
+
       {/* Listings Feed - Shows all active marketplace listings */}
       <section>
-        <h2 className="text-2xl mb-4">Recent Listings</h2>
+        <h2 className="text-2xl mb-4">Marketplace Activity</h2>
         <Tabs value={filter} onValueChange={(v: string) => setFilter(v as 'all' | 'offer' | 'request')}>
           <TabsList className="mb-4">
             <TabsTrigger value="all">All Listings</TabsTrigger>
@@ -248,7 +411,7 @@ export default function Home() {
           </TabsList>
 
           <TabsContent value={filter} className="space-y-4">
-            {filteredListings.map(listing => (
+            {filteredListings.slice(0, 5).map(listing => (
               <Card key={listing.id} className="p-6 hover:shadow-lg transition-shadow">
                 <div className="flex flex-col md:flex-row gap-6">
                   {/* Event Image - uses denormalized event data stored on listing */}
