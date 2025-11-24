@@ -142,10 +142,12 @@ export default function Home() {
 
   // Stage 1: Hide past events by default (keeps them accessible for future forum feature)
   // Only show past events if user is specifically searching for them
+  // Shows events happening today and in the future
   const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // Start of today (midnight)
   if (!searchQuery) {
-    // No search query - hide all past events from browsing
-    filteredEvents = filteredEvents.filter(event => new Date(event.date) >= now);
+    // No search query - hide events before today, but include all events happening today or later
+    filteredEvents = filteredEvents.filter(event => new Date(event.date) >= today);
   }
 
   // Stage 2: Filter by search query (case-insensitive match on name, venue, or category)
