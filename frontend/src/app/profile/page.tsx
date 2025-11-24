@@ -8,17 +8,26 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Star, Calendar, CheckCircle2, Settings } from 'lucide-react';
+import { Star, Calendar, CheckCircle2, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 
 export default function Profile() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('active');
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userListings, setUserListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  /**
+   * Handle user logout
+   * Clears authentication state and redirects to homepage
+   */
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
 
   /**
    * Redirect to login if user is not authenticated
@@ -119,10 +128,16 @@ export default function Profile() {
                 </div>
               </div>
 
-              <Button variant="outline" className="gap-2">
-                <Settings className="size-4" />
-                Edit Profile
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" className="gap-2">
+                  <Settings className="size-4" />
+                  Edit Profile
+                </Button>
+                <Button variant="outline" className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleLogout}>
+                  <LogOut className="size-4" />
+                  <span className="hidden sm:inline">Log out</span>
+                </Button>
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
