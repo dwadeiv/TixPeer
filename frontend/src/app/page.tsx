@@ -9,6 +9,11 @@
  * - Location-based filtering from LocationContext
  * - Tab-based listing type filtering (all/offer/request)
  * - All data from backend API - NO mock/hardcoded data
+ *
+ * Cache Strategy:
+ * - Client component fetches data on every mount via useEffect
+ * - Backend API returns Cache-Control: no-store headers
+ * - Ensures users always see fresh marketplace data without hard refresh
  */
 'use client';
 
