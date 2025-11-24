@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Ticket, Search, Plus, User, MessageSquare, Home, MapPin, Calendar } from 'lucide-react';
+import { Ticket, Search, Plus, User, MessageSquare, Home, MapPin, Calendar, LogOut, Settings } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { LocationSelector } from './LocationSelector';
@@ -11,18 +11,39 @@ import { useLocation } from '@/contexts/LocationContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import { Card } from './ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const { location, setLocation } = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { location, setLocation} = useLocation();
+  const { isAuthenticated, user, logout } = useAuth();
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [events, setEvents] = useState<any[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Handle user logout
+   * Clears authentication state and redirects to homepage
+   * Shows confirmation dialog before logging out
+   */
+  const handleLogout = () => {
+    const confirmed = window.confirm('Are you sure you want to log out?');
+    if (confirmed) {
+      logout();
+      router.push('/');
+    }
+  };
 
   // Fetch events when component mounts
   useEffect(() => {
@@ -213,12 +234,47 @@ export default function Header() {
                   <span className="hidden sm:inline">New Listing</span>
                 </Button>
               </Link>
-              {/* Profile button - redirects to login if not authenticated */}
-              <Link href={isAuthenticated ? "/profile" : "/login"}>
-                <Button variant="ghost" size="icon">
-                  <User className="size-5" />
-                </Button>
-              </Link>
+
+              {/* User Menu - Shows dropdown when authenticated, login button when not */}
+              {isAuthenticated && user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground size-9 outline-none">
+                    <User className="size-5" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{user.name}</span>
+                        <span className="text-xs text-slate-500 font-normal">{user.email}</span>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile" className="cursor-pointer">
+                        <User className="mr-2 size-4" />
+                        <span>Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile" className="cursor-pointer">
+                        <Settings className="mr-2 size-4" />
+                        <span>Settings</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 focus:text-red-600">
+                      <LogOut className="mr-2 size-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link href="/login">
+                  <Button variant="ghost" size="icon">
+                    <User className="size-5" />
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -262,17 +318,56 @@ export default function Header() {
               </div>
             </button>
           </Link>
-          {/* Profile button - redirects to login if not authenticated */}
-          <Link href={isAuthenticated ? "/profile" : "/login"} className="flex-1">
-            <button
-              className={`flex flex-col items-center justify-center w-full h-full gap-1 ${
-                isActive('/profile') || isActive('/login') ? 'text-purple-600' : 'text-slate-600'
-              }`}
-            >
-              <User className="size-5" />
-              <span className="text-xs">Profile</span>
-            </button>
-          </Link>
+          {/* User menu - Different behavior based on authentication status */}
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className={`flex-1 flex flex-col items-center justify-center w-full h-full gap-1 ${
+                  isActive('/profile') ? 'text-purple-600' : 'text-slate-600'
+                }`}
+              >
+                <User className="size-5" />
+                <span className="text-xs">Account</span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" side="top" className="w-56 mb-2">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{user?.name}</span>
+                    <span className="text-xs text-slate-500 font-normal">{user?.email}</span>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/profile" className="cursor-pointer">
+                    <User className="mr-2 size-4" />
+                    <span>Profile</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/profile" className="cursor-pointer">
+                    <Settings className="mr-2 size-4" />
+                    <span>Settings</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 focus:text-red-600">
+                  <LogOut className="mr-2 size-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link href="/login" className="flex-1">
+              <button
+                className={`flex flex-col items-center justify-center w-full h-full gap-1 ${
+                  isActive('/login') ? 'text-purple-600' : 'text-slate-600'
+                }`}
+              >
+                <User className="size-5" />
+                <span className="text-xs">Login</span>
+              </button>
+            </Link>
+          )}
         </div>
       </nav>
     </>
