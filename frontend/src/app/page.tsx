@@ -35,8 +35,9 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   // Date filtering state - allows users to filter events by time period
-  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month' | 'custom'>('all');
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month' | '3months' | '6months' | 'custom'>('all');
   const [customDateRange, setCustomDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+  const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
 
   // Location from global context - allows users to filter events by city
   const { location } = useLocation();
@@ -86,6 +87,7 @@ export default function Home() {
 
   /**
    * Helper function to get date range based on selected filter
+   * Supports quick filters (today, week, month, 3 months, 6 months) and custom ranges
    */
   const getDateRange = () => {
     const now = new Date();
@@ -107,6 +109,16 @@ export default function Home() {
           start: today,
           end: new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
         };
+      case '3months':
+        return {
+          start: today,
+          end: new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000)
+        };
+      case '6months':
+        return {
+          start: today,
+          end: new Date(today.getTime() + 180 * 24 * 60 * 60 * 1000)
+        };
       case 'custom':
         return customDateRange;
       default:
@@ -116,10 +128,11 @@ export default function Home() {
 
   /**
    * Event Filtering Logic
-   * Applied in THREE stages for better UX:
-   * 1. Search filter - narrows down by keyword (name/venue/category)
-   * 2. Location filter - further narrows by city
-   * 3. Date filter - filters by date range
+   * Applied in FOUR stages for better UX:
+   * 1. Past events filter - hide events that have already occurred (unless specifically searching for them)
+   * 2. Search filter - narrows down by keyword (name/venue/category)
+   * 3. Location filter - further narrows by city
+   * 4. Date filter - filters by date range
    *
    * This order matters: searching "Taylor Swift" in "Los Angeles" should
    * show all Taylor Swift events in LA, not LA events matching "Taylor Swift"
@@ -137,7 +150,15 @@ export default function Home() {
    */
   let filteredEvents = events;
 
-  // Stage 1: Filter by search query (case-insensitive match on name, venue, or category)
+  // Stage 1: Hide past events by default (keeps them accessible for future forum feature)
+  // Only show past events if user is specifically searching for them
+  const now = new Date();
+  if (!searchQuery) {
+    // No search query - hide all past events from browsing
+    filteredEvents = filteredEvents.filter(event => new Date(event.date) >= now);
+  }
+
+  // Stage 2: Filter by search query (case-insensitive match on name, venue, or category)
   if (searchQuery) {
     filteredEvents = filteredEvents.filter(event =>
       event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -146,12 +167,12 @@ export default function Home() {
     );
   }
 
-  // Stage 2: Filter by location (applies to both search results and general browsing)
+  // Stage 3: Filter by location (applies to both search results and general browsing)
   if (location) {
     filteredEvents = filteredEvents.filter(event => event.city === location.name);
   }
 
-  // Stage 3: Filter by date range
+  // Stage 4: Filter by date range
   const dateRange = getDateRange();
   if (dateRange.start || dateRange.end) {
     filteredEvents = filteredEvents.filter(event => {
@@ -291,12 +312,38 @@ export default function Home() {
             >
               This Month
             </Button>
+            <Button
+              variant={dateFilter === '3months' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setDateFilter('3months')}
+            >
+              Next 3 Months
+            </Button>
+            <Button
+              variant={dateFilter === '6months' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setDateFilter('6months')}
+            >
+              Next 6 Months
+            </Button>
+            <Button
+              variant={dateFilter === 'custom' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setShowCustomDatePicker(!showCustomDatePicker)}
+            >
+              <CalendarDays className="size-4 mr-1" />
+              Custom Range
+            </Button>
           </div>
           {dateFilter !== 'all' && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setDateFilter('all')}
+              onClick={() => {
+                setDateFilter('all');
+                setShowCustomDatePicker(false);
+                setCustomDateRange({ start: null, end: null });
+              }}
               className="gap-1"
             >
               <X className="size-4" />
@@ -304,6 +351,49 @@ export default function Home() {
             </Button>
           )}
         </div>
+
+        {/* Custom Date Range Picker */}
+        {showCustomDatePicker && (
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
+            <h4 className="text-sm font-semibold mb-3">Select Custom Date Range</h4>
+            <div className="flex gap-4 flex-wrap items-end">
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-sm text-slate-600 mb-1">Start Date</label>
+                <input
+                  type="date"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  value={customDateRange.start ? customDateRange.start.toISOString().split('T')[0] : ''}
+                  onChange={(e) => {
+                    const date = e.target.value ? new Date(e.target.value) : null;
+                    setCustomDateRange({ ...customDateRange, start: date });
+                  }}
+                />
+              </div>
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-sm text-slate-600 mb-1">End Date</label>
+                <input
+                  type="date"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  value={customDateRange.end ? customDateRange.end.toISOString().split('T')[0] : ''}
+                  onChange={(e) => {
+                    const date = e.target.value ? new Date(e.target.value) : null;
+                    setCustomDateRange({ ...customDateRange, end: date });
+                  }}
+                />
+              </div>
+              <Button
+                onClick={() => {
+                  if (customDateRange.start || customDateRange.end) {
+                    setDateFilter('custom');
+                  }
+                }}
+                disabled={!customDateRange.start && !customDateRange.end}
+              >
+                Apply
+              </Button>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Trending Events Section */}
