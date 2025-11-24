@@ -39,6 +39,35 @@ export default function Profile() {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [minZoom, setMinZoom] = useState(1);
+
+  /**
+   * Calculate minimum zoom needed to fill crop area when rotated
+   * This prevents empty space (black bars) at the corners when rotating
+   * Uses the formula: minZoom = 1 / cos(rotation) for square crops
+   */
+  useEffect(() => {
+    if (!previewUrl) return;
+
+    // Convert rotation to radians
+    const rotationRad = (rotation * Math.PI) / 180;
+
+    // Calculate minimum zoom to avoid empty corners
+    // For a square crop area, we need to ensure the rotated rectangle
+    // fully covers the crop area at all rotation angles
+    const absRotation = Math.abs(rotationRad % (Math.PI / 2));
+    const minZoomNeeded = Math.max(
+      1,
+      Math.abs(Math.cos(absRotation)) + Math.abs(Math.sin(absRotation))
+    );
+
+    setMinZoom(minZoomNeeded);
+
+    // Auto-adjust zoom if current zoom is below minimum
+    if (zoom < minZoomNeeded) {
+      setZoom(minZoomNeeded);
+    }
+  }, [rotation, previewUrl]);
 
   /**
    * Handle user logout
@@ -502,6 +531,7 @@ export default function Profile() {
                     onZoomChange={setZoom}
                     onRotationChange={setRotation}
                     onCropComplete={onCropComplete}
+                    minZoom={minZoom} // Prevent zoom below minimum needed to fill crop area
                   />
                 </div>
 
@@ -515,7 +545,7 @@ export default function Profile() {
                     <ZoomOut className="size-4 text-slate-500" />
                     <input
                       type="range"
-                      min={1}
+                      min={minZoom}
                       max={3}
                       step={0.1}
                       value={zoom}
