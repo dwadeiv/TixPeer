@@ -35,7 +35,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   // Date filtering state - allows users to filter events by time period
-  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month' | '3months' | '6months' | 'custom'>('all');
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month' | 'custom'>('all');
   const [customDateRange, setCustomDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
   const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
 
@@ -87,7 +87,7 @@ export default function Home() {
 
   /**
    * Helper function to get date range based on selected filter
-   * Supports quick filters (today, week, month, 3 months, 6 months) and custom ranges
+   * Supports quick filters (today, week, month) and custom ranges
    */
   const getDateRange = () => {
     const now = new Date();
@@ -108,16 +108,6 @@ export default function Home() {
         return {
           start: today,
           end: new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
-        };
-      case '3months':
-        return {
-          start: today,
-          end: new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000)
-        };
-      case '6months':
-        return {
-          start: today,
-          end: new Date(today.getTime() + 180 * 24 * 60 * 60 * 1000)
         };
       case 'custom':
         return customDateRange;
@@ -311,20 +301,6 @@ export default function Home() {
               onClick={() => setDateFilter('month')}
             >
               This Month
-            </Button>
-            <Button
-              variant={dateFilter === '3months' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setDateFilter('3months')}
-            >
-              Next 3 Months
-            </Button>
-            <Button
-              variant={dateFilter === '6months' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setDateFilter('6months')}
-            >
-              Next 6 Months
             </Button>
             <Button
               variant={dateFilter === 'custom' ? 'default' : 'outline'}
