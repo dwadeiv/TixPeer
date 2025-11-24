@@ -191,6 +191,24 @@ class ApiClient {
     return response.data;
   }
 
+  /**
+   * Upload profile avatar image
+   * Accepts a File object and uploads it to the server
+   * @param file - Image file to upload (jpg, jpeg, png, gif, webp, max 5MB)
+   * @returns Updated user profile with new avatar path
+   */
+  async uploadAvatar(file: File) {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    const response = await this.client.post('/users/profile/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  }
+
   /** Get all users (admin endpoint) */
   async getUsers() {
     const response = await this.client.get('/users');

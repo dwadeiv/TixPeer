@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
@@ -18,9 +18,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Star, Calendar, CheckCircle2, Settings, LogOut, Camera } from 'lucide-react';
+import { Star, Calendar, CheckCircle2, Settings, LogOut, Camera, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
+import Cropper from 'react-easy-crop';
+import type { Area } from 'react-easy-crop';
 
 export default function Profile() {
   const router = useRouter();
@@ -30,8 +32,13 @@ export default function Profile() {
   const [userListings, setUserListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
   const [saving, setSaving] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
   /**
    * Handle user logout
@@ -43,21 +50,164 @@ export default function Profile() {
   };
 
   /**
-   * Handle profile picture update
-   * Sends avatar URL to backend and refreshes profile data
+   * Callback fired when crop area changes
+   * Saves the cropped area pixel coordinates for later processing
+   */
+  const onCropComplete = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  /**
+   * Creates a cropped image from the original image and crop area
+   * Returns a File object with the cropped image data
+   */
+  const createCroppedImage = async (
+    imageSrc: string,
+    pixelCrop: Area,
+    rotation = 0
+  ): Promise<File> => {
+    const image = await createImage(imageSrc);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      throw new Error('No 2d context');
+    }
+
+    const maxSize = Math.max(image.width, image.height);
+    const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2));
+
+    canvas.width = safeArea;
+    canvas.height = safeArea;
+
+    ctx.translate(safeArea / 2, safeArea / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.translate(-safeArea / 2, -safeArea / 2);
+
+    ctx.drawImage(
+      image,
+      safeArea / 2 - image.width * 0.5,
+      safeArea / 2 - image.height * 0.5
+    );
+
+    const data = ctx.getImageData(0, 0, safeArea, safeArea);
+
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+
+    ctx.putImageData(
+      data,
+      Math.round(0 - safeArea / 2 + image.width * 0.5 - pixelCrop.x),
+      Math.round(0 - safeArea / 2 + image.height * 0.5 - pixelCrop.y)
+    );
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error('Canvas is empty'));
+          return;
+        }
+        const file = new File([blob], selectedFile?.name || 'cropped-image.jpg', {
+          type: 'image/jpeg',
+        });
+        resolve(file);
+      }, 'image/jpeg');
+    });
+  };
+
+  /**
+   * Helper function to create an image element from a URL
+   */
+  const createImage = (url: string): Promise<HTMLImageElement> =>
+    new Promise((resolve, reject) => {
+      const image = new Image();
+      image.addEventListener('load', () => resolve(image));
+      image.addEventListener('error', (error) => reject(error));
+      image.setAttribute('crossOrigin', 'anonymous');
+      image.src = url;
+    });
+
+  /**
+   * Handle file selection
+   * Creates a preview URL for the selected image file
+   * Validates file type and size before setting state
+   */
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      alert('Please select a valid image file (JPG, PNG, GIF, or WebP)');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      alert('File size must be less than 5MB');
+      return;
+    }
+
+    setSelectedFile(file);
+
+    // Create preview URL for the cropper
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+      // Reset crop settings when new file is selected
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setRotation(0);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  /**
+   * Handle profile picture upload
+   * Processes the image (crops, rotates) then uploads to backend
    */
   const handleUpdateAvatar = async () => {
+    if (!selectedFile || !previewUrl) {
+      alert('Please select an image file');
+      return;
+    }
+
+    if (!croppedAreaPixels) {
+      alert('Please wait for the image to load');
+      return;
+    }
+
     try {
       setSaving(true);
-      await api.updateProfile({ avatar: avatarUrl });
-      // Refresh profile data to show new avatar
-      const updatedUser = await api.getProfile();
-      setCurrentUser(updatedUser);
+
+      // Create cropped image file from user's crop settings
+      // This applies zoom, rotation, and crop area to produce final image
+      const croppedImageFile = await createCroppedImage(
+        previewUrl,
+        croppedAreaPixels,
+        rotation
+      );
+
+      // Upload cropped file to backend
+      const response = await api.uploadAvatar(croppedImageFile);
+
+      // Update current user with new avatar from response
+      setCurrentUser(response.user);
+
+      // Close dialog and reset state
       setAvatarDialogOpen(false);
-      setAvatarUrl('');
-    } catch (error) {
+      setSelectedFile(null);
+      setPreviewUrl('');
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setRotation(0);
+      setCroppedAreaPixels(null);
+    } catch (error: any) {
       console.error('Error updating avatar:', error);
-      alert('Failed to update profile picture. Please try again.');
+      const errorMessage = error.response?.data?.message || 'Failed to update profile picture. Please try again.';
+      alert(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -135,7 +285,7 @@ export default function Profile() {
           {/* Profile Picture with Edit Button */}
           <div className="relative">
             <Avatar className="size-24">
-              <AvatarImage src={currentUser.avatar} />
+              <AvatarImage src={currentUser.avatar ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${currentUser.avatar}` : currentUser.avatar} />
               <AvatarFallback>{currentUser.name[0]}</AvatarFallback>
             </Avatar>
             <Button
@@ -143,7 +293,6 @@ export default function Profile() {
               variant="secondary"
               className="absolute bottom-0 right-0 size-8 rounded-full shadow-md"
               onClick={() => {
-                setAvatarUrl(currentUser.avatar || '');
                 setAvatarDialogOpen(true);
               }}
             >
@@ -305,38 +454,119 @@ export default function Profile() {
           <DialogHeader>
             <DialogTitle>Update Profile Picture</DialogTitle>
             <DialogDescription>
-              Enter a URL for your profile picture. You can use image hosting services like Imgur, Cloudinary, or a direct image link.
+              Choose an image file from your device. Supported formats: JPG, PNG, GIF, WebP (max 5MB)
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            {/* Preview current avatar */}
-            {avatarUrl && (
-              <div className="flex justify-center">
-                <Avatar className="size-24">
-                  <AvatarImage src={avatarUrl} />
-                  <AvatarFallback>{currentUser.name[0]}</AvatarFallback>
-                </Avatar>
+            {/* File input */}
+            <div className="space-y-2">
+              <Label htmlFor="avatarFile">Select Image</Label>
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="avatarFile"
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 cursor-pointer transition-colors"
+                >
+                  <Camera className="size-4" />
+                  Choose from Device
+                </label>
+                <input
+                  id="avatarFile"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                {selectedFile && (
+                  <p className="text-sm text-slate-700">
+                    Selected: {selectedFile.name}
+                  </p>
+                )}
+                <p className="text-xs text-slate-500">
+                  Supported formats: JPG, PNG, GIF, WebP (max 5MB)
+                </p>
+              </div>
+            </div>
+
+            {/* Image cropping area */}
+            {previewUrl && (
+              <div className="space-y-4">
+                {/* Cropper container with fixed aspect ratio */}
+                <div className="relative w-full h-64 bg-slate-100 rounded-lg overflow-hidden">
+                  <Cropper
+                    image={previewUrl}
+                    crop={crop}
+                    zoom={zoom}
+                    rotation={rotation}
+                    aspect={1} // Square crop for profile picture
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onRotationChange={setRotation}
+                    onCropComplete={onCropComplete}
+                  />
+                </div>
+
+                {/* Zoom control */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Zoom</Label>
+                    <span className="text-xs text-slate-500">{Math.round(zoom * 100)}%</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <ZoomOut className="size-4 text-slate-500" />
+                    <input
+                      type="range"
+                      min={1}
+                      max={3}
+                      step={0.1}
+                      value={zoom}
+                      onChange={(e) => setZoom(Number(e.target.value))}
+                      className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <ZoomIn className="size-4 text-slate-500" />
+                  </div>
+                </div>
+
+                {/* Rotation control */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Rotation</Label>
+                    <span className="text-xs text-slate-500">{rotation}°</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <RotateCw className="size-4 text-slate-500" />
+                    <input
+                      type="range"
+                      min={0}
+                      max={360}
+                      step={1}
+                      value={rotation}
+                      onChange={(e) => setRotation(Number(e.target.value))}
+                      className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <RotateCw className="size-4 text-slate-500" />
+                  </div>
+                </div>
               </div>
             )}
-
-            {/* Image URL input */}
-            <div className="space-y-2">
-              <Label htmlFor="avatarUrl">Image URL</Label>
-              <Input
-                id="avatarUrl"
-                type="url"
-                placeholder="https://example.com/image.jpg"
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-              />
-            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAvatarDialogOpen(false)} disabled={saving}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAvatarDialogOpen(false);
+                setSelectedFile(null);
+                setPreviewUrl('');
+                setCrop({ x: 0, y: 0 });
+                setZoom(1);
+                setRotation(0);
+                setCroppedAreaPixels(null);
+              }}
+              disabled={saving}
+            >
               Cancel
             </Button>
-            <Button onClick={handleUpdateAvatar} disabled={saving || !avatarUrl}>
-              {saving ? 'Saving...' : 'Save'}
+            <Button onClick={handleUpdateAvatar} disabled={saving || !selectedFile}>
+              {saving ? 'Uploading...' : 'Upload'}
             </Button>
           </DialogFooter>
         </DialogContent>
