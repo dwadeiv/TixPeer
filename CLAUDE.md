@@ -80,6 +80,24 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
    - This ensures rules are permanently documented and consistently followed across sessions
    - Format rules clearly with bullet points explaining what to do and why
 
+8. **Create Proper Notes for Tracking**
+   - When the user says "make a note", ALWAYS create a proper tracking note in an appropriate file
+   - Use or create a TODO.md file in the relevant directory (frontend/TODO.md, backend/TODO.md, or root TODO.md)
+   - Notes should include:
+     - Clear description of the issue or future work needed
+     - Current implementation details with file locations and line numbers
+     - Why the work is needed or what problem exists
+     - Possible solutions or approaches to investigate
+     - Priority level (High/Medium/Low)
+   - This ensures important issues and future work are documented and not forgotten across sessions
+
+9. **Rule Violation Protocol**
+   - If I violate any rule in CLAUDE.md, I must acknowledge the violation immediately when called out
+   - I must explain which rule was broken and why the violation occurred
+   - I must take corrective action (revert changes, ask permission retroactively, etc.)
+   - After correcting the violation, I should briefly explain what I'll do differently to avoid repeating it
+   - This ensures accountability and continuous improvement in following established guidelines
+
 ## Technology Stack
 
 - **Frontend**: Next.js 14+ with TypeScript, App Router, Tailwind CSS

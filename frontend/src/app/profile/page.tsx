@@ -44,7 +44,10 @@ export default function Profile() {
   /**
    * Calculate minimum zoom needed to fill crop area when rotated
    * This prevents empty space (black bars) at the corners when rotating
-   * Uses the formula: minZoom = 1 / cos(rotation) for square crops
+   *
+   * For a square crop, when rotated by angle θ, we need to ensure the
+   * rotated bounding box fits within the crop area. The formula accounts
+   * for the width and height expansion when rotating a rectangle.
    */
   useEffect(() => {
     if (!previewUrl) return;
@@ -52,14 +55,16 @@ export default function Profile() {
     // Convert rotation to radians
     const rotationRad = (rotation * Math.PI) / 180;
 
-    // Calculate minimum zoom to avoid empty corners
-    // For a square crop area, we need to ensure the rotated rectangle
-    // fully covers the crop area at all rotation angles
-    const absRotation = Math.abs(rotationRad % (Math.PI / 2));
-    const minZoomNeeded = Math.max(
-      1,
-      Math.abs(Math.cos(absRotation)) + Math.abs(Math.sin(absRotation))
-    );
+    // Normalize rotation to 0-45 degree range (pattern repeats every 90°, symmetric around 45°)
+    const normalizedRad = Math.abs(rotationRad) % (Math.PI / 2);
+    const angle = normalizedRad > Math.PI / 4
+      ? Math.PI / 2 - normalizedRad
+      : normalizedRad;
+
+    // For a square crop area and square image:
+    // minZoom = (cos(θ) + sin(θ)) which reaches maximum √2 at 45°
+    // This ensures rotated image diagonal always covers the crop square
+    const minZoomNeeded = Math.cos(angle) + Math.sin(angle);
 
     setMinZoom(minZoomNeeded);
 
