@@ -8,7 +8,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Star, Calendar, CheckCircle2, Settings, LogOut } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Star, Calendar, CheckCircle2, Settings, LogOut, Camera } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 
@@ -19,6 +29,9 @@ export default function Profile() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userListings, setUserListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [saving, setSaving] = useState(false);
 
   /**
    * Handle user logout
@@ -27,6 +40,27 @@ export default function Profile() {
   const handleLogout = () => {
     logout();
     router.push('/');
+  };
+
+  /**
+   * Handle profile picture update
+   * Sends avatar URL to backend and refreshes profile data
+   */
+  const handleUpdateAvatar = async () => {
+    try {
+      setSaving(true);
+      await api.updateProfile({ avatar: avatarUrl });
+      // Refresh profile data to show new avatar
+      const updatedUser = await api.getProfile();
+      setCurrentUser(updatedUser);
+      setAvatarDialogOpen(false);
+      setAvatarUrl('');
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      alert('Failed to update profile picture. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   /**
@@ -98,10 +132,24 @@ export default function Profile() {
       {/* Profile Header */}
       <Card className="p-6 md:p-8 mb-6">
         <div className="flex flex-col md:flex-row items-start gap-6">
-          <Avatar className="size-24">
-            <AvatarImage src={currentUser.avatar} />
-            <AvatarFallback>{currentUser.name[0]}</AvatarFallback>
-          </Avatar>
+          {/* Profile Picture with Edit Button */}
+          <div className="relative">
+            <Avatar className="size-24">
+              <AvatarImage src={currentUser.avatar} />
+              <AvatarFallback>{currentUser.name[0]}</AvatarFallback>
+            </Avatar>
+            <Button
+              size="icon"
+              variant="secondary"
+              className="absolute bottom-0 right-0 size-8 rounded-full shadow-md"
+              onClick={() => {
+                setAvatarUrl(currentUser.avatar || '');
+                setAvatarDialogOpen(true);
+              }}
+            >
+              <Camera className="size-4" />
+            </Button>
+          </div>
 
           <div className="flex-1">
             <div className="flex items-start justify-between mb-4">
@@ -250,6 +298,49 @@ export default function Profile() {
           </div>
         </div>
       </Card>
+
+      {/* Avatar Upload Dialog */}
+      <Dialog open={avatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Profile Picture</DialogTitle>
+            <DialogDescription>
+              Enter a URL for your profile picture. You can use image hosting services like Imgur, Cloudinary, or a direct image link.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Preview current avatar */}
+            {avatarUrl && (
+              <div className="flex justify-center">
+                <Avatar className="size-24">
+                  <AvatarImage src={avatarUrl} />
+                  <AvatarFallback>{currentUser.name[0]}</AvatarFallback>
+                </Avatar>
+              </div>
+            )}
+
+            {/* Image URL input */}
+            <div className="space-y-2">
+              <Label htmlFor="avatarUrl">Image URL</Label>
+              <Input
+                id="avatarUrl"
+                type="url"
+                placeholder="https://example.com/image.jpg"
+                value={avatarUrl}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAvatarDialogOpen(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateAvatar} disabled={saving || !avatarUrl}>
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
