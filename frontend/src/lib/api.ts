@@ -23,14 +23,12 @@ class ApiClient {
 
   constructor() {
     // Create axios instance with base configuration
-    // Cache control headers ensure fresh data from backend
+    // Backend controls caching via response headers (max-age, stale-while-revalidate)
+    // No need for aggressive no-cache request headers from client
     this.client = axios.create({
       baseURL: API_URL,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
       },
     });
 
