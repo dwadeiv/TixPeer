@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  Header,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ListingsService } from './listings.service';
@@ -28,10 +29,18 @@ export class ListingsController {
     return this.listingsService.create(createListingDto);
   }
 
+  /**
+   * Get all listings endpoint
+   * No caching to ensure users see new listings immediately
+   * Critical for marketplace UX - listings should appear/update in real-time
+   */
   @Get()
   @ApiOperation({ summary: 'Get all listings' })
   @ApiQuery({ name: 'eventId', required: false })
   @ApiQuery({ name: 'userId', required: false })
+  @Header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  @Header('Pragma', 'no-cache')
+  @Header('Expires', '0')
   findAll(
     @Query('eventId') eventId?: string,
     @Query('userId') userId?: string,
@@ -45,9 +54,16 @@ export class ListingsController {
     return this.listingsService.findAll();
   }
 
+  /**
+   * Get single listing endpoint
+   * No caching to ensure listing status and details are always current
+   */
   @Get(':id')
   @ApiOperation({ summary: 'Get listing by ID' })
   @ApiParam({ name: 'id', description: 'Listing ID' })
+  @Header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  @Header('Pragma', 'no-cache')
+  @Header('Expires', '0')
   findOne(@Param('id') id: string): Promise<Listing | null> {
     return this.listingsService.findOne(id);
   }
