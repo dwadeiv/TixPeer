@@ -10,16 +10,17 @@ export class EventsController {
 
   /**
    * Get all events endpoint
-   * Cache-Control header prevents browser/proxy caching to ensure users always see fresh event data
-   * This is critical for marketplace freshness - new events should appear immediately for all users
+   *
+   * Cache Strategy:
+   * - Public cache for 60 seconds (events don't change frequently)
+   * - stale-while-revalidate=300 allows serving stale cache while fetching fresh data
+   * - Balances performance with data freshness for marketplace
    */
   @Get()
   @ApiOperation({ summary: 'Get all events' })
   @ApiQuery({ name: 'city', required: false })
   @ApiQuery({ name: 'category', required: false })
-  @Header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
-  @Header('Pragma', 'no-cache')
-  @Header('Expires', '0')
+  @Header('Cache-Control', 'public, max-age=60, stale-while-revalidate=300')
   findAll(
     @Query('city') city?: string,
     @Query('category') category?: string,
@@ -35,14 +36,15 @@ export class EventsController {
 
   /**
    * Get single event endpoint
-   * No caching to ensure event details (especially listing counts) stay fresh
+   *
+   * Cache Strategy:
+   * - Public cache for 30 seconds (listing counts may change more frequently)
+   * - stale-while-revalidate=300 for better UX
    */
   @Get(':id')
   @ApiOperation({ summary: 'Get event by ID' })
   @ApiParam({ name: 'id', description: 'Event ID' })
-  @Header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
-  @Header('Pragma', 'no-cache')
-  @Header('Expires', '0')
+  @Header('Cache-Control', 'public, max-age=30, stale-while-revalidate=300')
   findOne(@Param('id') id: string): Promise<Event | null> {
     return this.eventsService.findOne(id);
   }
