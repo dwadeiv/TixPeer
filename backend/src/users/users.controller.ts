@@ -81,10 +81,11 @@ export class UsersController {
       storage: diskStorage({
         destination: './uploads/avatars',
         filename: (req, file, cb) => {
-          // Generate unique filename: avatar-{userId}-{timestamp}{extension}
+          // Generate unique filename: avatar-{timestamp}{extension}
+          // User ID will be added via renaming in the controller method
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
-          cb(null, `avatar-${req.user.id}-${uniqueSuffix}${ext}`);
+          cb(null, `avatar-${uniqueSuffix}${ext}`);
         },
       }),
       fileFilter: (req, file, cb) => {
