@@ -10,6 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -40,6 +42,17 @@ export default function Profile() {
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [minZoom, setMinZoom] = useState(1);
+
+  // Edit Profile Dialog States
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    bio: '',
+    location: '',
+    phone: '',
+    favoriteEvents: [] as string[],
+  });
+  const [editSaving, setEditSaving] = useState(false);
 
   /**
    * Calculate minimum zoom needed to fill crop area when rotated
@@ -81,6 +94,67 @@ export default function Profile() {
   const handleLogout = () => {
     logout();
     router.push('/');
+  };
+
+  /**
+   * Open edit profile dialog and populate form with current user data
+   */
+  const handleOpenEditDialog = () => {
+    if (currentUser) {
+      setEditForm({
+        name: currentUser.name || '',
+        bio: currentUser.bio || '',
+        location: currentUser.location || '',
+        phone: currentUser.phone || '',
+        favoriteEvents: currentUser.favoriteEvents || [],
+      });
+      setEditDialogOpen(true);
+    }
+  };
+
+  /**
+   * Handle profile update submission
+   * Updates user profile on backend and refreshes local state
+   */
+  const handleUpdateProfile = async () => {
+    try {
+      setEditSaving(true);
+
+      // Call backend API to update profile
+      const updatedUser = await api.updateProfile({
+        name: editForm.name,
+        bio: editForm.bio,
+        location: editForm.location,
+        phone: editForm.phone,
+        favoriteEvents: editForm.favoriteEvents,
+      });
+
+      // Update local state
+      setCurrentUser(updatedUser);
+
+      // Update auth context
+      updateUser(updatedUser);
+
+      // Close dialog
+      setEditDialogOpen(false);
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      alert(error.response?.data?.message || 'Failed to update profile. Please try again.');
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  /**
+   * Toggle favorite event category
+   */
+  const toggleFavoriteEvent = (category: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      favoriteEvents: prev.favoriteEvents.includes(category)
+        ? prev.favoriteEvents.filter(e => e !== category)
+        : [...prev.favoriteEvents, category]
+    }));
   };
 
   /**
@@ -370,7 +444,7 @@ export default function Profile() {
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" className="gap-2" onClick={handleOpenEditDialog}>
                   <Settings className="size-4" />
                   Edit Profile
                 </Button>
@@ -612,6 +686,106 @@ export default function Profile() {
             </Button>
             <Button onClick={handleUpdateAvatar} disabled={saving || !selectedFile}>
               {saving ? 'Uploading...' : 'Upload'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>
+              Update your profile information. Changes will be visible to other users on your public profile.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            {/* Name */}
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Display Name *</Label>
+              <Input
+                id="edit-name"
+                value={editForm.name}
+                onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Your name"
+                required
+              />
+              <p className="text-sm text-slate-500">This is how other users will see your name</p>
+            </div>
+
+            {/* Bio */}
+            <div className="space-y-2">
+              <Label htmlFor="edit-bio">Bio</Label>
+              <Textarea
+                id="edit-bio"
+                value={editForm.bio}
+                onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+                placeholder="Tell others about yourself..."
+                rows={4}
+                maxLength={500}
+              />
+              <p className="text-sm text-slate-500">
+                {editForm.bio.length}/500 characters
+              </p>
+            </div>
+
+            {/* Location */}
+            <div className="space-y-2">
+              <Label htmlFor="edit-location">Location</Label>
+              <Input
+                id="edit-location"
+                value={editForm.location}
+                onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
+                placeholder="City, State or Country"
+              />
+              <p className="text-sm text-slate-500">Help others find local traders</p>
+            </div>
+
+            {/* Phone */}
+            <div className="space-y-2">
+              <Label htmlFor="edit-phone">Phone Number (Optional)</Label>
+              <Input
+                id="edit-phone"
+                type="tel"
+                value={editForm.phone}
+                onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="+1 (555) 123-4567"
+              />
+              <p className="text-sm text-slate-500">For verified users only. Not shown publicly.</p>
+            </div>
+
+            {/* Favorite Event Categories */}
+            <div className="space-y-3">
+              <Label>Favorite Event Categories</Label>
+              <p className="text-sm text-slate-500">Select the types of events you're interested in</p>
+              <div className="grid grid-cols-2 gap-3">
+                {['Music', 'Sports', 'Theater', 'Comedy', 'Festival', 'Other'].map((category) => (
+                  <div key={category} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`category-${category.toLowerCase()}`}
+                      checked={editForm.favoriteEvents.includes(category)}
+                      onCheckedChange={() => toggleFavoriteEvent(category)}
+                    />
+                    <label
+                      htmlFor={`category-${category.toLowerCase()}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {category}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)} disabled={editSaving}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateProfile} disabled={editSaving || !editForm.name.trim()}>
+              {editSaving ? 'Saving...' : 'Save Changes'}
             </Button>
           </DialogFooter>
         </DialogContent>
