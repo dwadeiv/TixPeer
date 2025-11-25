@@ -54,36 +54,40 @@ export default function Home() {
   /**
    * Fetch all events and listings on mount
    * Uses Promise.all to make parallel API requests for faster loading
-   * Includes timeout protection to prevent indefinite loading states
+   * Includes automatic retry with exponential backoff for resilience
    * This is critical for good UX - users see all data at once
    */
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = async (retryCount = 0) => {
       try {
         setLoading(true);
         setError(null);
 
-        // Add 5 second timeout to prevent indefinite loading
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout - server may be starting up')), 5000)
-        );
-
         // Parallel fetching - much faster than sequential API calls
-        const dataPromise = Promise.all([
+        const [eventsData, listingsData] = await Promise.all([
           api.getEvents(),
           api.getListings()
         ]);
-
-        // Race between data fetch and timeout
-        const [eventsData, listingsData] = await Promise.race([dataPromise, timeoutPromise]) as [any, any];
 
         setEvents(eventsData);
         setListings(listingsData);
       } catch (error: any) {
         console.error('Error fetching data:', error);
+
+        // Retry logic: Retry up to 2 times with exponential backoff
+        // This handles the case where backend is still initializing
+        if (retryCount < 2) {
+          const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s
+          console.log(`Retrying in ${delay}ms... (attempt ${retryCount + 1}/2)`);
+          setTimeout(() => fetchData(retryCount + 1), delay);
+          return;
+        }
+
         setError(error.message || 'Failed to load data. Please try again.');
       } finally {
-        setLoading(false);
+        if (retryCount >= 2) {
+          setLoading(false);
+        }
       }
     };
 

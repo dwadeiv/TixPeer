@@ -4,8 +4,7 @@
  *
  * Security Features:
  * - Password strength validation
- * - Honeypot field to catch bots
- * - Time-based verification
+ * - Honeypot field to catch bots (invisible field that bots fill out)
  * - Email validation
  * - Passwords hashed on backend (bcrypt)
  */
@@ -31,7 +30,6 @@ export default function RegisterPage() {
   const [honeypot, setHoneypot] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [formStartTime] = useState(Date.now());
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
 
@@ -89,16 +87,10 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
 
-    // Bot protection: Check honeypot
+    // Bot protection: Check honeypot field (should be empty)
+    // Bots typically auto-fill all fields, including hidden ones
     if (honeypot) {
       console.warn('Bot detected: honeypot filled');
-      return;
-    }
-
-    // Bot protection: Ensure minimum time
-    const timeSpent = Date.now() - formStartTime;
-    if (timeSpent < 5000) {
-      setError('Please take your time filling out the form');
       return;
     }
 

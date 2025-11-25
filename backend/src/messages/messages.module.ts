@@ -6,6 +6,7 @@ import { MessagesController } from './messages.controller';
 import { MessagesGateway } from './messages.gateway';
 import { Message } from './entities/message.entity';
 import { Conversation } from './entities/conversation.entity';
+import { UsersModule } from '../users/users.module';
 
 /**
  * Messages Module
@@ -29,6 +30,7 @@ import { Conversation } from './entities/conversation.entity';
       secret: process.env.JWT_SECRET || 'your-secret-key',
       signOptions: { expiresIn: '7d' },
     }),
+    UsersModule, // Import UsersModule to access UsersService
   ],
   controllers: [MessagesController],
   providers: [MessagesService, MessagesGateway],
