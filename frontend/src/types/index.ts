@@ -43,16 +43,42 @@ export interface Event {
   activeListings: number;
 }
 
+/**
+ * Message interface matching backend Message entity
+ * Represents an individual message in a conversation
+ */
 export interface Message {
   id: string;
+  conversationId: string;
   senderId: string;
+  sender: User;
+  receiverId: string;
+  receiver: User;
   text: string;
-  timestamp: string;
+  isDelivered: boolean;
+  deliveredAt?: string;
+  isRead: boolean;
+  readAt?: string;
+  isEdited: boolean;
+  editedAt?: string;
+  createdAt: string;
 }
 
+/**
+ * Conversation interface matching backend Conversation entity
+ * Represents a chat thread between two users
+ */
 export interface Conversation {
   id: string;
-  listingId: string;
-  participants: User[];
-  messages: Message[];
+  user1Id: string;
+  user1: User;
+  user2Id: string;
+  user2: User;
+  lastMessageText?: string;
+  lastMessageAt?: string;
+  lastMessageSenderId?: string;
+  unreadCountUser1: number;
+  unreadCountUser2: number;
+  createdAt: string;
+  updatedAt: string;
 }
