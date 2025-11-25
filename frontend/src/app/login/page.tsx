@@ -3,8 +3,7 @@
  * Secure user authentication with bot protection
  *
  * Security Features:
- * - Honeypot field to catch bots
- * - Time-based verification (minimum form fill time)
+ * - Honeypot field to catch bots (invisible field that bots fill out)
  * - Password fields are never exposed
  * - HTTPS-only in production (via backend)
  */
@@ -28,7 +27,6 @@ export default function LoginPage() {
   const [honeypot, setHoneypot] = useState(''); // Bot trap field
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [formStartTime] = useState(Date.now()); // Track form load time
   const [shouldRedirect, setShouldRedirect] = useState(false);
 
   // Get redirect URL from query parameters (set by protected pages)
@@ -55,15 +53,9 @@ export default function LoginPage() {
     setError('');
 
     // Bot protection: Check honeypot field (should be empty)
+    // Bots typically auto-fill all fields, including hidden ones
     if (honeypot) {
       console.warn('Bot detected: honeypot filled');
-      return;
-    }
-
-    // Bot protection: Ensure minimum time spent on form (3 seconds)
-    const timeSpent = Date.now() - formStartTime;
-    if (timeSpent < 3000) {
-      setError('Please take your time filling out the form');
       return;
     }
 
