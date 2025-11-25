@@ -4,17 +4,9 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AppDataSource } from './database/data-source';
 import { seed } from './database/seeds/seed';
-import { NestExpressApplication } from '@nestjs/platform-express';
-import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
-
-  // Serve static files from uploads directory
-  // This allows uploaded images to be accessed via http://localhost:3001/uploads/avatars/filename.jpg
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
-    prefix: '/uploads',
-  });
+  const app = await NestFactory.create(AppModule);
 
   // Enable CORS
   app.enableCors({

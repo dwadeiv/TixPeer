@@ -67,7 +67,10 @@ export class User {
 
   // ========== Profile & Trust System Fields ==========
 
-  /** Profile picture URL (typically from avatar service or upload) */
+  /**
+   * Profile picture URL from Cloudinary CDN
+   * Format: https://res.cloudinary.com/{cloud_name}/image/upload/...
+   */
   @Column({ nullable: true })
   avatar: string;
 
