@@ -37,20 +37,23 @@ TixPeer is a peer-to-peer ticket exchange marketplace built as a full-stack mono
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │           Next.js 14 Frontend (Port 3000)                 │  │
 │  │  - App Router (Server + Client Components)                │  │
-│  │  - React Context (Auth, Location)                         │  │
+│  │  - React Context (Auth, Location, Messages)               │  │
 │  │  - Tailwind CSS + shadcn/ui                               │  │
 │  │  - Axios API Client                                       │  │
+│  │  - Socket.IO Client (Real-time messaging)                 │  │
 │  └──────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
                               │
-                              │ HTTP/REST
-                              ▼
+                 ┌────────────┴─────────────┐
+                 │ HTTP/REST                │ WebSocket
+                 ▼                          ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                         API LAYER                                │
 │                                                                  │
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │           NestJS Backend (Port 3001)                      │  │
 │  │  - RESTful API Controllers                                │  │
+│  │  - WebSocket Gateway (Socket.IO)                          │  │
 │  │  - Service Layer (Business Logic)                         │  │
 │  │  - JWT Authentication Guards                              │  │
 │  │  - TypeORM Repository Pattern                             │  │
@@ -69,9 +72,11 @@ TixPeer is a peer-to-peer ticket exchange marketplace built as a full-stack mono
 │  - Events & Listings       │  │  - Profile Pictures      │
 │  - Transactions            │  │  - Image Optimization    │
 │  - Trust Scores            │  │                          │
-│                            │  │  SendGrid (Future)       │
-│  Docker Container          │  │  - Email Verification    │
-│  Port: 5432                │  │  - Notifications         │
+│  - Messages                │  │  SendGrid (Future)       │
+│  - Conversations           │  │  - Email Verification    │
+│                            │  │  - Notifications         │
+│  Docker Container          │  │                          │
+│  Port: 5432                │  │                          │
 └────────────────────────────┘  └──────────────────────────┘
 ```
 
@@ -95,6 +100,7 @@ TixPeer is a peer-to-peer ticket exchange marketplace built as a full-stack mono
 - **Authentication:** Passport.js + JWT
 - **Validation:** class-validator
 - **API Docs:** Swagger/OpenAPI
+- **Real-time:** Socket.IO (WebSocket)
 
 ### Database
 - **Database:** PostgreSQL 16
@@ -180,6 +186,44 @@ Return Created Listing
     ↓
 Redirect to Listing Detail Page
 ```
+
+### Real-time Messaging Flow
+```
+User Clicks "Contact Seller"
+    ↓
+Check for Existing Conversation
+    ↓
+Navigate to Messages Page
+    ↓
+WebSocket Connection Established
+    ↓
+Socket.IO connects to /messages namespace
+    ↓
+JWT Authentication via socket.handshake.auth
+    ↓
+User joins room: user:{userId}
+    ↓
+Server tracks online status
+    ↓
+User sends message (socket.emit('message:send'))
+    ↓
+Server creates Message + updates Conversation
+    ↓
+Server emits 'message:sent' to sender
+    ↓
+Server emits 'message:received' to recipient
+    ↓
+Frontend updates messages array
+    ↓
+Auto-scroll to bottom, show read receipt
+```
+
+**Real-time Features:**
+- **Typing indicators:** socket.emit('typing:start/stop')
+- **Read receipts:** socket.emit('messages:markRead')
+- **Online status:** Tracked via connection/disconnection events
+- **Message delivery:** Instant via WebSocket, fallback to HTTP
+- **Unread counts:** Updated in real-time across all tabs
 
 ---
 
@@ -273,16 +317,70 @@ transactions
 └── updatedAt (timestamp)
 ```
 
+### Conversations Table
+```sql
+conversations
+├── id (uuid, PK)
+├── user1Id (uuid, FK → users.id)
+├── user2Id (uuid, FK → users.id)
+├── lastMessageText (text, nullable)
+├── lastMessageAt (timestamp, nullable)
+├── lastMessageSenderId (uuid, nullable, FK → users.id)
+├── unreadCountUser1 (int, default: 0)
+├── unreadCountUser2 (int, default: 0)
+├── createdAt (timestamp)
+├── updatedAt (timestamp)
+└── UNIQUE INDEX (user1Id, user2Id)  -- Prevents duplicate conversations
+```
+
+**Design Notes:**
+- User IDs always stored in sorted order (lower UUID first as user1Id)
+- Unique index prevents duplicate conversations between same two users
+- Metadata (lastMessage*) denormalized for performance (conversation list sorting)
+- Separate unread counts per user for accurate notification badges
+
+### Messages Table
+```sql
+messages
+├── id (uuid, PK)
+├── conversationId (uuid, FK → conversations.id, ON DELETE CASCADE)
+├── senderId (uuid, FK → users.id)
+├── receiverId (uuid, FK → users.id)
+├── text (text)
+├── isDelivered (boolean, default: false)
+├── deliveredAt (timestamp, nullable)
+├── isRead (boolean, default: false)
+├── readAt (timestamp, nullable)
+├── isEdited (boolean, default: false)
+├── editedAt (timestamp, nullable)
+├── createdAt (timestamp)
+└── updatedAt (timestamp)
+└── INDEX (conversationId, createdAt)  -- For efficient message history queries
+```
+
+**Design Notes:**
+- Cascade delete: Messages deleted when conversation is deleted
+- Delivery tracking: isDelivered/deliveredAt for sent confirmation
+- Read receipts: isRead/readAt for checkmark indicators
+- Edit tracking: isEdited/editedAt for message edit history
+- Index on (conversationId, createdAt) for fast pagination
+
 ### Relationships
 ```
 User 1──────── * Listings (as seller/requester)
 User 1──────── * Tickets (as seller)
 User 1──────── * Transactions (as buyer)
 User 1──────── * Transactions (as seller)
+User 1──────── * Conversations (as user1)
+User 1──────── * Conversations (as user2)
+User 1──────── * Messages (as sender)
+User 1──────── * Messages (as receiver)
 
 Event 1──────── * Listings
 
 Ticket 1──────── * Transactions
+
+Conversation 1──────── * Messages
 ```
 
 ---
@@ -324,11 +422,43 @@ Ticket 1──────── * Transactions
 │   ├── PATCH  /:id                 (Update ticket - JWT required)
 │   └── DELETE /:id                 (Delete ticket - JWT required)
 │
-└── /transactions
-    ├── POST   /                    (Create transaction - JWT required)
-    ├── GET    /my-transactions     (Get user's transactions - JWT required)
-    ├── GET    /:id                 (Get transaction details - JWT required)
-    └── PATCH  /:id/status          (Update transaction status - JWT required)
+├── /transactions
+│   ├── POST   /                    (Create transaction - JWT required)
+│   ├── GET    /my-transactions     (Get user's transactions - JWT required)
+│   ├── GET    /:id                 (Get transaction details - JWT required)
+│   └── PATCH  /:id/status          (Update transaction status - JWT required)
+│
+└── /messages
+    ├── GET    /conversations       (Get all conversations - JWT required)
+    ├── GET    /conversations/:id   (Get conversation by ID - JWT required)
+    ├── GET    /                    (Get messages - JWT required)
+    ├── POST   /                    (Send message via HTTP fallback - JWT required)
+    ├── POST   /conversations/:id/read  (Mark conversation as read - JWT required)
+    ├── GET    /unread/count        (Get total unread count - JWT required)
+    ├── GET    /search              (Search messages - JWT required)
+    └── DELETE /:id                 (Delete message - JWT required)
+```
+
+### WebSocket Events (Socket.IO)
+```
+Namespace: /messages
+Authentication: JWT via socket.handshake.auth.token
+
+Client → Server Events:
+├── message:send             { receiverId: uuid, text: string }
+├── typing:start             { receiverId: uuid }
+├── typing:stop              { receiverId: uuid }
+└── messages:markRead        { conversationId: uuid }
+
+Server → Client Events:
+├── message:sent             { message: Message }
+├── message:received         { message: Message }
+├── typing:start             { userId: uuid }
+├── typing:stop              { userId: uuid }
+├── messages:read            { conversationId: uuid, messageIds: uuid[] }
+├── user:online              { userId: uuid }
+├── user:offline             { userId: uuid }
+└── conversations:unread     { conversations: UnreadCount[] }
 ```
 
 ### API Response Format
@@ -449,7 +579,8 @@ src/
 │
 ├── contexts/
 │   ├── AuthContext.tsx         # Authentication state management
-│   └── LocationContext.tsx     # Selected city state
+│   ├── LocationContext.tsx     # Selected city state
+│   └── MessagesContext.tsx     # WebSocket messaging state
 │
 ├── lib/
 │   └── api.ts                  # Axios API client singleton
@@ -463,12 +594,14 @@ src/
 **React Context API:**
 - `AuthContext`: User authentication state, login/logout, token management
 - `LocationContext`: Selected city for filtering events
+- `MessagesContext`: WebSocket connection, conversations, messages, real-time events
 
 **Why Context vs Redux:**
-- Simple state (only auth + location)
+- Simple state (auth, location, messaging)
 - No complex state mutations
 - Fewer dependencies
 - Easier to understand and maintain
+- Built-in WebSocket lifecycle management in MessagesContext
 
 ### Routing Strategy
 
@@ -579,14 +712,22 @@ src/
 
 ## Future Architecture Enhancements
 
+### Completed Features
+1. ✅ **Real-time Messaging:** Socket.IO WebSockets for peer-to-peer chat
+   - Conversation management with unique user pair indexing
+   - Real-time message delivery, typing indicators, read receipts
+   - Online/offline user status tracking
+   - Unread message counts and notifications
+   - Message search and conversation filtering
+
 ### Planned Improvements
-1. **Real-time Messaging:** WebSockets for peer-to-peer chat
-2. **Payment Integration:** Stripe for secure transactions
-3. **Search Enhancement:** Elasticsearch for advanced search
-4. **Caching Layer:** Redis for session management and API caching
-5. **CDN:** CloudFront for frontend static assets
-6. **Monitoring:** Sentry for error tracking, DataDog for metrics
-7. **Testing:** Jest unit tests, Playwright E2E tests
+1. **Payment Integration:** Stripe for secure transactions
+2. **Search Enhancement:** Elasticsearch for advanced search
+3. **Caching Layer:** Redis for session management and API caching
+4. **CDN:** CloudFront for frontend static assets
+5. **Monitoring:** Sentry for error tracking, DataDog for metrics
+6. **Testing:** Jest unit tests, Playwright E2E tests
+7. **Message Enhancements:** File attachments, message reactions, group chats
 
 ### Scalability Roadmap
 - Horizontal scaling with load balancer
