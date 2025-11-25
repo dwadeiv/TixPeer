@@ -11,6 +11,8 @@ export interface User {
   badges?: string[];
   responseTime?: string;
   verifiedUser?: boolean;
+  isOnline?: boolean;
+  lastSeen?: string;
 }
 
 export interface Listing {

@@ -60,4 +60,17 @@ export class UsersService {
   async validatePassword(user: User, password: string): Promise<boolean> {
     return bcrypt.compare(password, user.password);
   }
+
+  /**
+   * Update user's online status and lastSeen timestamp
+   * Called when user connects/disconnects from WebSocket
+   * @param userId - User ID to update
+   * @param isOnline - Whether user is online
+   */
+  async updateOnlineStatus(userId: string, isOnline: boolean): Promise<void> {
+    await this.usersRepository.update(userId, {
+      isOnline,
+      lastSeen: new Date(),
+    });
+  }
 }
