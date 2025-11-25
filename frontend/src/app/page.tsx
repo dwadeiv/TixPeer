@@ -71,6 +71,7 @@ export default function Home() {
 
         setEvents(eventsData);
         setListings(listingsData);
+        setLoading(false); // Clear loading on success
       } catch (error: any) {
         console.error('Error fetching data:', error);
 
@@ -84,10 +85,7 @@ export default function Home() {
         }
 
         setError(error.message || 'Failed to load data. Please try again.');
-      } finally {
-        if (retryCount >= 2) {
-          setLoading(false);
-        }
+        setLoading(false); // Clear loading on final error
       }
     };
 
