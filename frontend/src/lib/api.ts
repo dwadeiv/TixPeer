@@ -251,6 +251,89 @@ class ApiClient {
     const response = await this.client.delete(`/listings/${id}`);
     return response.data;
   }
+
+  // ========== Messages Endpoints ==========
+
+  /**
+   * Get all conversations for the current user
+   * Returns conversations sorted by most recent activity
+   */
+  async getConversations() {
+    const response = await this.client.get('/messages/conversations');
+    return response.data;
+  }
+
+  /**
+   * Get a specific conversation by ID
+   * @param conversationId - UUID of the conversation
+   */
+  async getConversation(conversationId: string) {
+    const response = await this.client.get(`/messages/conversations/${conversationId}`);
+    return response.data;
+  }
+
+  /**
+   * Get messages for a conversation
+   * @param params - conversationId or otherUserId, plus optional pagination
+   */
+  async getMessages(params: {
+    conversationId?: string;
+    otherUserId?: string;
+    limit?: number;
+    offset?: number;
+  }) {
+    const response = await this.client.get('/messages', { params });
+    return response.data;
+  }
+
+  /**
+   * Send a new message (HTTP fallback, prefer WebSocket for real-time)
+   * @param receiverId - UUID of the recipient user
+   * @param text - Message content
+   */
+  async sendMessage(receiverId: string, text: string) {
+    const response = await this.client.post('/messages', { receiverId, text });
+    return response.data;
+  }
+
+  /**
+   * Mark all messages in a conversation as read
+   * @param conversationId - UUID of the conversation
+   */
+  async markConversationAsRead(conversationId: string) {
+    const response = await this.client.post(`/messages/conversations/${conversationId}/read`);
+    return response.data;
+  }
+
+  /**
+   * Get total unread message count across all conversations
+   * Returns { count: number }
+   */
+  async getUnreadCount() {
+    const response = await this.client.get('/messages/unread/count');
+    return response.data;
+  }
+
+  /**
+   * Search messages by text content
+   * @param searchText - Text to search for
+   * @param limit - Maximum number of results (default 50)
+   */
+  async searchMessages(searchText: string, limit: number = 50) {
+    const response = await this.client.get('/messages/search', {
+      params: { q: searchText, limit },
+    });
+    return response.data;
+  }
+
+  /**
+   * Delete a message
+   * @param messageId - UUID of the message to delete
+   */
+  async deleteMessage(messageId: string) {
+    const response = await this.client.delete(`/messages/${messageId}`);
+    return response.data;
+  }
 }
 
 export const api = new ApiClient();
