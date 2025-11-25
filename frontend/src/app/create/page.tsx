@@ -59,13 +59,27 @@ export default function CreateListing() {
     e.preventDefault();
 
     try {
+      // Find the selected event to get all required fields
+      const selectedEvent = events.find(event => event.id === eventId);
+      if (!selectedEvent) {
+        alert('Please select an event');
+        return;
+      }
+
       // Create listing via backend API
+      // Backend will extract userId from JWT token automatically
       const listingData = {
         eventId,
         type: listingType,
         ticketCount: parseInt(ticketCount),
         sectionInfo: sectionInfo || undefined,
         description,
+        lookingFor: lookingFor || undefined,
+        // Include event details required by backend DTO
+        eventName: selectedEvent.name,
+        eventDate: selectedEvent.date,
+        eventVenue: selectedEvent.venue,
+        eventImage: selectedEvent.imageUrl || '',
       };
 
       const newListing = await api.createListing(listingData);
@@ -201,19 +215,24 @@ export default function CreateListing() {
           {/* Looking For */}
           <div className="space-y-2">
             <Label htmlFor="lookingFor">
-              {listingType === 'offer' ? 'What are you looking for?' : 'Open to trading?'}
+              {listingType === 'offer' ? 'What are you looking for?' : 'What can you offer?'}
             </Label>
             <Textarea
               id="lookingFor"
               placeholder={
                 listingType === 'offer'
-                  ? "e.g., Hamilton tickets any date, NBA Finals tickets, or cash"
-                  : "e.g., Have Taylor Swift tickets to trade"
+                  ? "e.g., Hamilton tickets any date, NBA Finals tickets, or $200 cash"
+                  : "e.g., $150 cash, or willing to trade Taylor Swift tickets"
               }
               rows={3}
               value={lookingFor}
               onChange={(e) => setLookingFor(e.target.value)}
             />
+            <p className="text-sm text-slate-600">
+              {listingType === 'offer'
+                ? 'Specify cash amount, other tickets, or both - this is a complete bartering platform'
+                : 'Let sellers know what you can offer - cash, other tickets, or combination of both'}
+            </p>
           </div>
 
           {/* Proof of Tickets (offer only) */}

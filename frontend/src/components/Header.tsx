@@ -238,6 +238,20 @@ export default function Header() {
                 </Button>
               </Link>
 
+              {/* Messages Icon with Unread Badge */}
+              {isAuthenticated && (
+                <Link href="/messages">
+                  <Button variant="ghost" size="icon" className="relative">
+                    <MessageSquare className="size-5" />
+                    {totalUnreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-medium rounded-full size-5 flex items-center justify-center">
+                        {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
+              )}
+
               {/* User Menu - Shows dropdown when authenticated, login button when not */}
               {isAuthenticated && user ? (
                 <DropdownMenu>

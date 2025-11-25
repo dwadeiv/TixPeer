@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   Header,
+  Request,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ListingsService } from './listings.service';
@@ -21,12 +22,22 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class ListingsController {
   constructor(private readonly listingsService: ListingsService) {}
 
+  /**
+   * Create a new listing
+   * Authenticated endpoint - extracts userId from JWT token
+   */
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new listing' })
-  create(@Body() createListingDto: CreateListingDto): Promise<Listing> {
-    return this.listingsService.create(createListingDto);
+  create(@Body() createListingDto: CreateListingDto, @Request() req: any): Promise<Listing> {
+    // Extract userId from JWT token and add to DTO
+    // Convert to string to ensure it passes DTO validation
+    const listingData = {
+      ...createListingDto,
+      userId: String(req.user.id),
+    };
+    return this.listingsService.create(listingData);
   }
 
   /**
