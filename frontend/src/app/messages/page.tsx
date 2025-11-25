@@ -427,7 +427,13 @@ export default function Messages() {
                       <div className="flex-1">
                         <h2 className="font-medium">{otherUser.name}</h2>
                         <p className="text-sm text-slate-500">
-                          {isOnline ? 'Online' : 'Offline'}
+                          {isOnline ? (
+                            'Online'
+                          ) : otherUser.lastSeen ? (
+                            `Last seen ${formatDistanceToNow(new Date(otherUser.lastSeen), { addSuffix: true })}`
+                          ) : (
+                            'Offline'
+                          )}
                         </p>
                       </div>
                       <Button

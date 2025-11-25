@@ -11,6 +11,7 @@ import { Server, Socket } from 'socket.io';
 import { UseGuards } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { WsJwtGuard } from '../auth/guards/ws-jwt.guard';
+import { UsersService } from '../users/users.service';
 
 /**
  * WebSocket Gateway for Real-Time Messaging
@@ -47,7 +48,10 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
    */
   private typingUsers: Map<string, Set<string>> = new Map();
 
-  constructor(private readonly messagesService: MessagesService) {}
+  constructor(
+    private readonly messagesService: MessagesService,
+    private readonly usersService: UsersService,
+  ) {}
 
   /**
    * Handle new WebSocket connection
@@ -67,6 +71,9 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
       // Track this user's socket connection
       this.userSockets.set(userId, client.id);
       console.log(`User ${userId} connected with socket ${client.id}`);
+
+      // Update user's online status and lastSeen in database
+      await this.usersService.updateOnlineStatus(userId, true);
 
       // Join a room for this user (for targeted messaging)
       client.join(`user:${userId}`);
@@ -107,11 +114,17 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
     if (disconnectedUserId) {
       console.log(`User ${disconnectedUserId} disconnected`);
 
+      // Update user's online status and lastSeen in database
+      this.usersService.updateOnlineStatus(disconnectedUserId, false);
+
       // Clean up typing state
       this.typingUsers.delete(disconnectedUserId);
 
       // Notify other users that this user is offline
-      client.broadcast.emit('user:offline', { userId: disconnectedUserId });
+      client.broadcast.emit('user:offline', {
+        userId: disconnectedUserId,
+        lastSeen: new Date(),
+      });
     }
   }
 
