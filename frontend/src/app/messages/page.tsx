@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useMessages } from '@/contexts/MessagesContext';
 import { Conversation, Message } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
+import { api } from '@/lib/api';
 
 export default function Messages() {
   const router = useRouter();
@@ -38,6 +39,8 @@ export default function Messages() {
   // UI State
   const [messageText, setMessageText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [newConversationUserId, setNewConversationUserId] = useState<string | null>(null);
+  const [newConversationUser, setNewConversationUser] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   /**
@@ -58,6 +61,55 @@ export default function Messages() {
       refreshConversations();
     }
   }, [isAuthenticated, refreshConversations]);
+
+  /**
+   * Handle URL query parameters for starting/selecting conversations
+   * - conversationId: Select existing conversation
+   * - userId: Start new conversation with user
+   */
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    const conversationId = searchParams.get('conversationId');
+    const userId = searchParams.get('userId');
+
+    if (conversationId && conversations.length > 0) {
+      // Select existing conversation by ID
+      const conversation = conversations.find(c => c.id === conversationId);
+      if (conversation) {
+        handleSelectConversation(conversation);
+        setNewConversationUserId(null);
+        setNewConversationUser(null);
+      }
+    } else if (userId) {
+      // Check if conversation exists with this user
+      const existingConversation = conversations.find(
+        (conv) =>
+          (conv.user1Id === userId && conv.user2Id === user.id) ||
+          (conv.user2Id === userId && conv.user1Id === user.id)
+      );
+
+      if (existingConversation) {
+        // Select existing conversation
+        handleSelectConversation(existingConversation);
+        setNewConversationUserId(null);
+        setNewConversationUser(null);
+      } else {
+        // New conversation - fetch user data and set up for first message
+        const fetchUserForNewConversation = async () => {
+          try {
+            const userData = await api.getUser(userId);
+            setNewConversationUserId(userId);
+            setNewConversationUser(userData);
+            setCurrentConversation(null); // Clear any selected conversation
+          } catch (error) {
+            console.error('Error fetching user for new conversation:', error);
+          }
+        };
+        fetchUserForNewConversation();
+      }
+    }
+  }, [isAuthenticated, user, conversations, searchParams]);
 
   /**
    * Auto-scroll to bottom when new messages arrive
@@ -81,7 +133,23 @@ export default function Messages() {
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!messageText.trim() || !currentConversation || !user) return;
+    if (!messageText.trim() || !user) return;
+
+    // Handle new conversation (first message)
+    if (newConversationUserId && !currentConversation) {
+      sendMessage(newConversationUserId, messageText.trim());
+      setMessageText('');
+      // After sending first message, conversation will be created
+      // Clear the new conversation state
+      setNewConversationUserId(null);
+      setNewConversationUser(null);
+      // Refresh conversations to get the newly created one
+      setTimeout(() => refreshConversations(), 500);
+      return;
+    }
+
+    // Handle existing conversation
+    if (!currentConversation) return;
 
     // Get the other user's ID
     const otherUser = currentConversation.user1Id === user.id
@@ -273,7 +341,7 @@ export default function Messages() {
 
         {/* Chat Window */}
         <Card className="lg:col-span-2 flex flex-col overflow-hidden">
-          {!currentConversation ? (
+          {!currentConversation && !newConversationUser ? (
             <div className="flex-1 flex items-center justify-center p-8">
               <div className="text-center">
                 <MessageSquare className="size-16 mx-auto mb-4 text-slate-300" />
@@ -283,6 +351,58 @@ export default function Messages() {
                 </p>
               </div>
             </div>
+          ) : newConversationUser ? (
+            <>
+              {/* Chat Header - New Conversation */}
+              <div className="p-4 border-b flex items-center gap-3">
+                <div className="relative">
+                  <Avatar className="size-10">
+                    <AvatarImage src={newConversationUser.avatar} />
+                    <AvatarFallback>{newConversationUser.name[0]}</AvatarFallback>
+                  </Avatar>
+                </div>
+                <div className="flex-1">
+                  <h2 className="font-medium">{newConversationUser.name}</h2>
+                  <p className="text-sm text-slate-500">New conversation</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push(`/users/${newConversationUser.id}`)}
+                >
+                  View Profile
+                </Button>
+              </div>
+
+              {/* Messages - Empty for new conversation */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-slate-500">Start a conversation with {newConversationUser.name}!</p>
+                </div>
+              </div>
+
+              {/* Message Input */}
+              <form onSubmit={handleSendMessage} className="p-4 border-t">
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Type a message..."
+                    value={messageText}
+                    onChange={handleTyping}
+                    disabled={!connected}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={!messageText.trim() || !connected}
+                    className="gap-2"
+                  >
+                    <Send className="size-4" />
+                    Send
+                  </Button>
+                </div>
+              </form>
+            </>
           ) : (
             <>
               {/* Chat Header */}
