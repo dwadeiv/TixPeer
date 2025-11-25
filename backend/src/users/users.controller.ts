@@ -14,16 +14,18 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiConsumes, ApiBody } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CloudinaryService } from '../common/services/cloudinary.service';
 
 @ApiTags('users')
 @Controller('users')
 @UseInterceptors(ClassSerializerInterceptor)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all users' })
@@ -55,15 +57,15 @@ export class UsersController {
   }
 
   /**
-   * Upload profile avatar image
+   * Upload profile avatar image to Cloudinary
    * Accepts image file upload (jpg, jpeg, png, gif, webp)
    * Max file size: 5MB
-   * Stores file in uploads/avatars/ directory with unique name
+   * Stores image in Cloudinary cloud storage with CDN delivery
    */
   @Post('profile/avatar')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Upload profile avatar image' })
+  @ApiOperation({ summary: 'Upload profile avatar image to Cloudinary' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -78,16 +80,6 @@ export class UsersController {
   })
   @UseInterceptors(
     FileInterceptor('avatar', {
-      storage: diskStorage({
-        destination: './uploads/avatars',
-        filename: (req, file, cb) => {
-          // Generate unique filename: avatar-{timestamp}{extension}
-          // User ID will be added via renaming in the controller method
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          cb(null, `avatar-${uniqueSuffix}${ext}`);
-        },
-      }),
       fileFilter: (req, file, cb) => {
         // Only allow image files
         if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
@@ -111,18 +103,30 @@ export class UsersController {
       throw new BadRequestException('No file uploaded');
     }
 
-    // Build the avatar URL path (relative to server)
-    const avatarPath = `/uploads/avatars/${file.filename}`;
+    try {
+      // Upload image to Cloudinary
+      // The image is stored in the 'tixpeer/avatars' folder with a public ID based on user ID
+      const uploadResult = await this.cloudinaryService.uploadImage(
+        file,
+        'tixpeer/avatars',
+        `user-${req.user.id}`, // Public ID: user-{userId} for easy identification
+      );
 
-    // Update user's avatar field in database
-    const updatedUser = await this.usersService.update(req.user.id, {
-      avatar: avatarPath,
-    });
+      // Get the secure CDN URL from Cloudinary
+      const avatarUrl = uploadResult.secure_url;
 
-    return {
-      message: 'Avatar uploaded successfully',
-      avatar: avatarPath,
-      user: updatedUser,
-    };
+      // Update user's avatar field in database with Cloudinary CDN URL
+      const updatedUser = await this.usersService.update(req.user.id, {
+        avatar: avatarUrl,
+      });
+
+      return {
+        message: 'Avatar uploaded successfully to Cloudinary',
+        avatar: avatarUrl,
+        user: updatedUser,
+      };
+    } catch (error) {
+      throw new BadRequestException(`Failed to upload avatar: ${error.message}`);
+    }
   }
 }
