@@ -103,27 +103,29 @@ export default function UserProfile() {
               )}
 
               <div className="w-full space-y-4 mb-6">
+                {/* Trust Score - Full Width with text wrapping prevention */}
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="flex items-center justify-center gap-2 mb-1">
-                    <Star className="size-5 fill-yellow-400 text-yellow-400" />
-                    <span className="text-2xl">{user.trustScore}</span>
+                    <Star className="size-5 fill-yellow-400 text-yellow-400 flex-shrink-0" />
+                    <span className="text-2xl whitespace-nowrap">{user.trustScore}</span>
                   </div>
-                  <p className="text-sm text-slate-600">Trust Score</p>
+                  <p className="text-sm text-slate-600 whitespace-nowrap">Trust Score</p>
                 </div>
 
+                {/* Stats Grid - Prevent text wrapping in stat boxes */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <p className="text-2xl mb-1">{user.completedTrades}</p>
-                    <p className="text-sm text-slate-600">Completed Trades</p>
+                  <div className="bg-slate-50 rounded-lg p-4 min-w-0">
+                    <p className="text-2xl mb-1 whitespace-nowrap">{user.completedTrades}</p>
+                    <p className="text-xs sm:text-sm text-slate-600">Completed Trades</p>
                   </div>
 
                   {user.responseTime && (
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-slate-50 rounded-lg p-4 min-w-0">
                       <div className="flex items-center justify-center gap-1 mb-1">
-                        <Clock className="size-4" />
-                        <p className="text-sm font-medium">{user.responseTime}</p>
+                        <Clock className="size-4 flex-shrink-0" />
+                        <p className="text-sm font-medium whitespace-nowrap">{user.responseTime}</p>
                       </div>
-                      <p className="text-sm text-slate-600">Response Time</p>
+                      <p className="text-xs sm:text-sm text-slate-600">Response Time</p>
                     </div>
                   )}
                 </div>
@@ -178,10 +180,10 @@ export default function UserProfile() {
               <div className="flex items-center gap-2 text-slate-600">
                 <Calendar className="size-4" />
                 <span>
-                  Joined {new Date(user.joinedDate).toLocaleDateString('en-US', {
+                  Joined {user.joinedDate ? new Date(user.joinedDate).toLocaleDateString('en-US', {
                     month: 'long',
                     year: 'numeric'
-                  })}
+                  }) : 'Recently'}
                 </span>
               </div>
             </div>

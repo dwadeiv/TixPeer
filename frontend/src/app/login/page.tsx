@@ -21,7 +21,7 @@ import { Ticket, Lock, Mail, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,13 +29,26 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [formStartTime] = useState(Date.now()); // Track form load time
+  const [shouldRedirect, setShouldRedirect] = useState(false);
 
-  // Redirect if already authenticated
+  // Get redirect URL from query parameters (set by protected pages)
+  const [redirectPath, setRedirectPath] = useState('/profile');
+
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/profile');
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    if (redirect) {
+      setRedirectPath(redirect);
     }
-  }, [isAuthenticated, router]);
+  }, []);
+
+  // Only redirect if authenticated AND auth has finished loading
+  // This prevents redirect loops when token is invalid
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && shouldRedirect) {
+      router.push(redirectPath);
+    }
+  }, [isAuthenticated, authLoading, shouldRedirect, redirectPath, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +81,9 @@ export default function LoginPage() {
     try {
       setIsLoading(true);
       await login(email, password);
-      router.push('/profile');
+      // Set flag to allow redirect after successful login
+      setShouldRedirect(true);
+      router.push(redirectPath);
     } catch (err: any) {
       // Check if the error is about email verification
       if (err.message && err.message.includes('verify your email')) {

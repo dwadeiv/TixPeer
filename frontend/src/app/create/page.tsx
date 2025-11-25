@@ -11,10 +11,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Upload } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function CreateListing() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const initialType = (searchParams.get('type') as 'offer' | 'request') || 'offer';
 
   const [listingType, setListingType] = useState<'offer' | 'request'>(initialType);
@@ -25,6 +27,17 @@ export default function CreateListing() {
   const [lookingFor, setLookingFor] = useState('');
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  /**
+   * Authentication Guard
+   * Redirect unauthenticated users to login page
+   * This prevents non-logged-in users from accessing the create listing page
+   */
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/login?redirect=/create');
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -42,11 +55,42 @@ export default function CreateListing() {
     fetchEvents();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would save to a backend
-    router.push('/');
+
+    try {
+      // Create listing via backend API
+      const listingData = {
+        eventId,
+        type: listingType,
+        ticketCount: parseInt(ticketCount),
+        sectionInfo: sectionInfo || undefined,
+        description,
+      };
+
+      const newListing = await api.createListing(listingData);
+
+      // Redirect to the newly created listing detail page
+      router.push(`/listings/${newListing.id}`);
+    } catch (error: any) {
+      console.error('Error creating listing:', error);
+      alert(error.response?.data?.message || 'Failed to create listing. Please try again.');
+    }
   };
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="max-w-3xl mx-auto pb-20 md:pb-8 flex justify-center items-center min-h-[400px]">
+        <p className="text-slate-600">Loading...</p>
+      </div>
+    );
+  }
+
+  // Don't render the form if user is not authenticated (prevents flash before redirect)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="max-w-3xl mx-auto pb-20 md:pb-8">

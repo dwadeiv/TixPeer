@@ -17,6 +17,7 @@ interface User {
   id: string;
   email: string;
   name: string;
+  avatar?: string;
 }
 
 interface AuthContextType {
@@ -26,6 +27,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
+  updateUser: (userData: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,18 +38,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /**
    * Initialize auth state on mount
-   * Checks localStorage for existing token and validates it
+   * Checks localStorage for existing token and fetches fresh user data from API
+   * This ensures we always have the latest user info (including avatar)
    */
   useEffect(() => {
     const initializeAuth = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        const storedUser = localStorage.getItem('user');
 
-        if (token && storedUser) {
+        if (token) {
           // Set token for API requests
           api.setToken(token);
-          setUser(JSON.parse(storedUser));
+
+          // Fetch fresh user data from API to get latest avatar and other fields
+          try {
+            const freshUser = await api.getProfile();
+            setUser(freshUser);
+            localStorage.setItem('user', JSON.stringify(freshUser));
+          } catch (error) {
+            // If API call fails (e.g., token expired), fall back to stored user
+            console.error('Error fetching fresh user data:', error);
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+              setUser(JSON.parse(storedUser));
+            } else {
+              // Token is invalid and no stored user, clear auth
+              localStorage.removeItem('authToken');
+              api.setToken(null);
+            }
+          }
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -111,6 +130,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  /**
+   * Update user data in state and localStorage
+   * Used when user profile is updated (e.g., avatar upload)
+   */
+  const updateUser = (userData: Partial<User>) => {
+    if (!user) return;
+
+    const updatedUser = { ...user, ...userData };
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
   const value = {
     user,
     isAuthenticated: !!user,
@@ -118,6 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     register,
     logout,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

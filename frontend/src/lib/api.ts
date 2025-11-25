@@ -150,33 +150,6 @@ class ApiClient {
     return response.data;
   }
 
-  // ========== Legacy Tickets Endpoints (Deprecated - Use Listings Instead) ==========
-
-  async getTickets(params?: { category?: string; search?: string }) {
-    const response = await this.client.get('/tickets', { params });
-    return response.data;
-  }
-
-  async getTicket(id: string) {
-    const response = await this.client.get(`/tickets/${id}`);
-    return response.data;
-  }
-
-  async createTicket(data: any) {
-    const response = await this.client.post('/tickets', data);
-    return response.data;
-  }
-
-  async updateTicket(id: string, data: any) {
-    const response = await this.client.patch(`/tickets/${id}`, data);
-    return response.data;
-  }
-
-  async deleteTicket(id: string) {
-    const response = await this.client.delete(`/tickets/${id}`);
-    return response.data;
-  }
-
   // ========== User Endpoints ==========
 
   /** Get currently logged in user's profile (requires authentication) */
@@ -188,6 +161,24 @@ class ApiClient {
   /** Update current user's profile */
   async updateProfile(data: any) {
     const response = await this.client.patch('/users/profile', data);
+    return response.data;
+  }
+
+  /**
+   * Upload profile avatar image
+   * Accepts a File object and uploads it to the server
+   * @param file - Image file to upload (jpg, jpeg, png, gif, webp, max 5MB)
+   * @returns Updated user profile with new avatar path
+   */
+  async uploadAvatar(file: File) {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    const response = await this.client.post('/users/profile/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   }
 
