@@ -259,6 +259,7 @@ export default function Profile() {
 
   /**
    * Fetch profile data only if user is authenticated
+   * If API call fails with 401, logout to clear invalid token
    */
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -276,15 +277,20 @@ export default function Profile() {
         setCurrentUser(userData);
         const myListings = listingsData.filter((l: any) => l.userId === userData.id);
         setUserListings(myListings);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching profile data:', error);
+        // If unauthorized, clear auth state and redirect to login
+        if (error.response?.status === 401) {
+          logout();
+          router.push('/login');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchProfileData();
-  }, [authLoading, isAuthenticated]);
+  }, [authLoading, isAuthenticated, logout, router]);
 
   // Show loading state while checking authentication or fetching data
   if (authLoading || loading) {
@@ -301,9 +307,9 @@ export default function Profile() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <p className="text-slate-600">Please log in to view your profile</p>
-        <Link href="/login">
-          <Button>Go to Login</Button>
-        </Link>
+        <Button asChild>
+          <Link href="/login">Go to Login</Link>
+        </Button>
       </div>
     );
   }
@@ -319,7 +325,8 @@ export default function Profile() {
           {/* Profile Picture with Edit Button */}
           <div className="relative">
             <Avatar className="size-24">
-              <AvatarImage src={currentUser.avatar ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${currentUser.avatar}` : currentUser.avatar} />
+              {/* Avatar URLs from Cloudinary are full CDN URLs, don't prepend API_URL */}
+              <AvatarImage src={currentUser.avatar} />
               <AvatarFallback>{currentUser.name[0]}</AvatarFallback>
             </Avatar>
             <Button
