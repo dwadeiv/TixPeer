@@ -180,10 +180,10 @@ export default function UserProfile() {
               <div className="flex items-center gap-2 text-slate-600">
                 <Calendar className="size-4" />
                 <span>
-                  Joined {new Date(user.joinedDate).toLocaleDateString('en-US', {
+                  Joined {user.joinedDate ? new Date(user.joinedDate).toLocaleDateString('en-US', {
                     month: 'long',
                     year: 'numeric'
-                  })}
+                  }) : 'Recently'}
                 </span>
               </div>
             </div>
