@@ -1,39 +1,45 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { MessageSquare } from 'lucide-react';
-import { mockUsers } from '@/utils/mockData';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Messages() {
-  // Mock conversations
-  const conversations = [
-    {
-      id: '1',
-      user: mockUsers[0],
-      lastMessage: "That sounds great! Let's finalize the trade details.",
-      timestamp: new Date(Date.now() - 300000).toISOString(),
-      unread: true,
-      listing: 'Taylor Swift | The Eras Tour',
-    },
-    {
-      id: '2',
-      user: mockUsers[1],
-      lastMessage: 'Thanks for reaching out! I can meet downtown.',
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-      unread: false,
-      listing: 'NBA Finals - Game 3',
-    },
-    {
-      id: '3',
-      user: mockUsers[2],
-      lastMessage: 'I have the tickets ready. When works for you?',
-      timestamp: new Date(Date.now() - 86400000).toISOString(),
-      unread: false,
-      listing: 'Hamilton',
-    },
-  ];
+  const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  /**
+   * Authentication Guard
+   * Redirect unauthenticated users to login page
+   * This prevents non-logged-in users from accessing messages/chat
+   */
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/login?redirect=/messages');
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="max-w-4xl mx-auto pb-20 md:pb-8 flex justify-center items-center min-h-[400px]">
+        <p className="text-slate-600">Loading...</p>
+      </div>
+    );
+  }
+
+  // Don't render content if user is not authenticated (prevents flash before redirect)
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  // TODO: Replace with real conversations from backend API (violates Rule 6 - NO Mock Data)
+  // This is a placeholder until the messaging/chat system is implemented
+  const conversations: any[] = [];
 
   return (
     <div className="max-w-4xl mx-auto pb-20 md:pb-8">

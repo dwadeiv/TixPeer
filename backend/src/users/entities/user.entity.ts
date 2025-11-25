@@ -67,15 +67,19 @@ export class User {
 
   // ========== Profile & Trust System Fields ==========
 
-  /** Profile picture URL (typically from avatar service or upload) */
+  /**
+   * Profile picture URL from Cloudinary CDN
+   * Format: https://res.cloudinary.com/{cloud_name}/image/upload/...
+   */
   @Column({ nullable: true })
   avatar: string;
 
   /**
-   * Trust score from 0.0 to 5.0 based on completed trades and user ratings
-   * Higher scores indicate more reliable traders
+   * Trust score from 0.0 to 5.0 based on user behavior and reviews
+   * New users start at maximum (5.0) - trust can only be lost through negative actions
+   * This "trust by default" approach encourages participation and community growth
    */
-  @Column({ type: 'decimal', precision: 3, scale: 1, default: 0 })
+  @Column({ type: 'decimal', precision: 3, scale: 1, default: 5.0 })
   trustScore: number;
 
   /**
@@ -137,7 +141,15 @@ export class User {
 
   // ========== Timestamps ==========
 
-  /** When the user account was created */
+  /**
+   * When the user joined TixPeer (displayed publicly on profile)
+   * Defaults to account creation time
+   * Separate from createdAt for flexibility (e.g., if migrating from another platform)
+   */
+  @CreateDateColumn()
+  joinedDate: Date;
+
+  /** When the user account was created (internal tracking) */
   @CreateDateColumn()
   createdAt: Date;
 

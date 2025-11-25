@@ -46,3 +46,6 @@ logs/
 .cache/
 .temp/
 tmp/
+
+# Uploaded files (now using Cloudinary for cloud storage)
+backend/uploads/
