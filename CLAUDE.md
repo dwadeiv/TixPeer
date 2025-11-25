@@ -8,26 +8,76 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
 
 ## CRITICAL DEVELOPMENT RULES
 
-**These rules MUST be followed for all feature development and code modifications:**
+**These rules MUST be followed for all feature development and code modifications.**
 
-1. **End-to-End Functionality Required**
+**Rules are ordered by priority: session setup → operational protocols → development standards → code quality → documentation.**
+
+---
+
+### Priority 1: Session Setup
+
+1. **Session Initialization Protocol**
+   - At the start of every new session, read ARCHITECTURE.md to understand the current system state
+   - This provides context on:
+     - Overall system architecture and component relationships
+     - Database schema and entity relationships
+     - Available API endpoints and their purposes
+     - Technology stack and external services
+     - Key design decisions and rationale
+   - Reading the architecture document ensures faster onboarding and prevents reinventing solutions
+   - After reading ARCHITECTURE.md, be prepared to answer questions and make informed decisions based on the documented architecture
+
+---
+
+### Priority 2: Operational Protocols
+
+2. **Rule Violation Protocol**
+   - If I violate any rule in CLAUDE.md, I must acknowledge the violation immediately when called out
+   - I must explain which rule was broken and why the violation occurred
+   - I must take corrective action (revert changes, ask permission retroactively, etc.)
+   - After correcting the violation, I should briefly explain what I'll do differently to avoid repeating it
+   - This ensures accountability and continuous improvement in following established guidelines
+
+3. **Documentation Updates Require Approval**
+   - When development changes warrant updates to existing documentation files (CLAUDE.md, CACHING.md, etc.)
+   - ALWAYS ask for permission BEFORE updating any documentation
+   - Do NOT automatically update documentation without explicit approval
+   - This ensures proper control over what gets documented and when
+   - Exception: Creating NEW documentation files when explicitly requested
+
+4. **Add New Rules to CLAUDE.md With Permission**
+   - When the user requests a new rule or workflow to follow
+   - ALWAYS ask for permission before adding the rule to CLAUDE.md
+   - Once approved, add it to this CLAUDE.md file under the appropriate section
+   - This ensures rules are permanently documented and consistently followed across sessions
+   - Format rules clearly with bullet points explaining what to do and why
+
+---
+
+### Priority 3: Core Development Standards
+
+5. **End-to-End Functionality Required**
    - Every feature must work completely from frontend → backend → database
    - No half-implemented features or placeholder functionality
    - Test the full user flow before considering a feature complete
 
-2. **NO Mock or Random Data in Frontend**
+6. **NO Mock or Random Data in Frontend**
    - All data displayed in the frontend MUST come from the backend API
    - NEVER use hardcoded arrays, faker libraries, or random data generators in frontend components
    - If a feature needs data, implement the backend endpoint and database model first
    - The only exception is initial seed data in `backend/src/database/seeds/` for development
 
-3. **Full-Stack Development Always**
+7. **Full-Stack Development Always**
    - Do not avoid backend work - implement what's required for the feature
    - Create/modify database entities, services, controllers, and API endpoints as needed
    - Ensure proper data flow: Database ↔ Backend API ↔ Frontend
    - Update API client methods in `frontend/src/lib/api.ts` for all new endpoints
 
-4. **Code Must Be Well-Commented**
+---
+
+### Priority 4: Code Quality
+
+8. **Code Must Be Well-Commented**
    - Add clear comments explaining:
      - WHY code exists (business logic and reasoning)
      - WHAT complex operations do (step-by-step for non-obvious code)
@@ -51,7 +101,7 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
      }
      ```
 
-5. **Maintain Comments as Code Evolves**
+9. **Maintain Comments as Code Evolves**
    - When modifying code, ALWAYS update or remove related comments
    - Delete comments that no longer apply to the current implementation
    - Add new comments when introducing new logic or complexity
@@ -66,21 +116,25 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
      - ❌ Leave comment saying "fetches users" when code now fetches events
      - ❌ Keep comment about "pagination" after removing pagination feature
 
-6. **Documentation Updates Require Approval**
-   - When development changes warrant updates to existing documentation files (CLAUDE.md, CACHING.md, etc.)
-   - ALWAYS ask for permission BEFORE updating any documentation
-   - Do NOT automatically update documentation without explicit approval
-   - This ensures proper control over what gets documented and when
-   - Exception: Creating NEW documentation files when explicitly requested
+---
 
-7. **Add New Rules to CLAUDE.md With Permission**
-   - When the user requests a new rule or workflow to follow
-   - ALWAYS ask for permission before adding the rule to CLAUDE.md
-   - Once approved, add it to this CLAUDE.md file under the appropriate section
-   - This ensures rules are permanently documented and consistently followed across sessions
-   - Format rules clearly with bullet points explaining what to do and why
+### Priority 5: Documentation & Tracking
 
-8. **Create Proper Notes for Tracking**
+10. **Architecture Documentation Maintenance**
+   - When making architectural changes, update ARCHITECTURE.md to reflect the changes
+   - Architectural changes include:
+     - New modules, services, or controllers
+     - Database schema changes (new tables, columns, relationships)
+     - New API endpoints or endpoint modifications
+     - External service integrations (Cloudinary, SendGrid, etc.)
+     - Authentication/authorization changes
+     - Data flow modifications
+   - Keep the "Last Updated" date current at the top of ARCHITECTURE.md
+   - Update relevant sections: API structure, database schema, tech stack, data flows, etc.
+   - Maintain consistency between code implementation and documentation
+   - This ensures the architecture document stays accurate and useful for understanding the system
+
+11. **Create Proper Notes for Tracking**
    - When the user says "make a note", ALWAYS create a proper tracking note in an appropriate file
    - Use or create a TODO.md file in the relevant directory (frontend/TODO.md, backend/TODO.md, or root TODO.md)
    - Notes should include:
@@ -90,13 +144,6 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
      - Possible solutions or approaches to investigate
      - Priority level (High/Medium/Low)
    - This ensures important issues and future work are documented and not forgotten across sessions
-
-9. **Rule Violation Protocol**
-   - If I violate any rule in CLAUDE.md, I must acknowledge the violation immediately when called out
-   - I must explain which rule was broken and why the violation occurred
-   - I must take corrective action (revert changes, ask permission retroactively, etc.)
-   - After correcting the violation, I should briefly explain what I'll do differently to avoid repeating it
-   - This ensures accountability and continuous improvement in following established guidelines
 
 ## Technology Stack
 
