@@ -1,6 +1,6 @@
 # TixPeer Architecture
 
-**Last Updated:** November 24, 2025
+**Last Updated:** November 25, 2025
 
 ## Table of Contents
 - [Overview](#overview)
@@ -198,7 +198,7 @@ users
 ├── isEmailVerified (boolean)
 ├── emailVerificationToken (varchar, nullable)
 ├── emailVerificationTokenExpiry (timestamp, nullable)
-├── trustScore (decimal(3,1), default: 0)
+├── trustScore (decimal(3,1), default: 5.0)
 ├── completedTrades (int, default: 0)
 ├── joinedDate (timestamp)
 ├── createdAt (timestamp)
@@ -529,13 +529,22 @@ src/
 - Add refresh token rotation
 
 ### 5. Trust Score System
-**Decision:** Implement trust scores instead of traditional reviews
+**Decision:** Implement "trust by default" scoring system (0.0-5.0) instead of traditional reviews
 
 **Rationale:**
-- Simpler than full review system
-- Encourages completed trades
-- Numeric score easier to display/compare
-- Can expand to reviews later
+- **New users start at maximum (5.0)**: Encourages participation and removes barriers to entry
+- **Trust can only decrease**: Through negative actions, reviews, or violations
+- **More welcoming approach**: Assumes good faith until proven otherwise
+- **Community-driven**: Trust is earned through behavior, not just transaction count
+- **Simpler than reviews**: Numeric score easier to display/compare
+- **Scalable**: Can expand to detailed reviews later while maintaining core score
+
+**Implementation:**
+- Range: 0.0 (no trust) to 5.0 (maximum trust)
+- Default for new users: 5.0
+- Decreases through: failed transactions, negative reviews, policy violations
+- Never increases above 5.0 (maintains ceiling)
+- Displayed prominently on user profiles alongside completed trades count
 
 ### 6. Email Verification Flow
 **Decision:** Allow account creation but require email verification for full features

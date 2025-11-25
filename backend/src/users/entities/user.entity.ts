@@ -75,10 +75,11 @@ export class User {
   avatar: string;
 
   /**
-   * Trust score from 0.0 to 5.0 based on completed trades and user ratings
-   * Higher scores indicate more reliable traders
+   * Trust score from 0.0 to 5.0 based on user behavior and reviews
+   * New users start at maximum (5.0) - trust can only be lost through negative actions
+   * This "trust by default" approach encourages participation and community growth
    */
-  @Column({ type: 'decimal', precision: 3, scale: 1, default: 0 })
+  @Column({ type: 'decimal', precision: 3, scale: 1, default: 5.0 })
   trustScore: number;
 
   /**

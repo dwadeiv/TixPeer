@@ -167,7 +167,9 @@ function generateUser(index: number) {
     email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${index}@example.com`,
     avatar: `https://i.pravatar.cc/150?img=${(index % 70) + 1}`, // Pravatar provides 70 unique avatars
     joinedDate: new Date(2023, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString(),
-    trustScore: (3.5 + Math.random() * 1.5).toFixed(1), // 3.5-5.0 range (most users are reliable)
+    // Trust score: New users start at 5.0 (max) - trust can only be lost through negative actions
+    // Seed data shows realistic distribution: some users lost trust, most maintain it
+    trustScore: (3.5 + Math.random() * 1.5).toFixed(1), // 3.5-5.0 range (simulates varied history)
     completedTrades: Math.floor(Math.random() * 75), // 0-75 trades (realistic distribution)
     bio: bios[Math.floor(Math.random() * bios.length)],
     location: `${city.name}, ${city.state}`,
