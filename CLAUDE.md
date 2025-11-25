@@ -145,6 +145,17 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
      - Priority level (High/Medium/Low)
    - This ensures important issues and future work are documented and not forgotten across sessions
 
+12. **Auto-generate Commit Messages**
+   - After generating new code or files, automatically generate a commit message
+   - Simply print the commit message for the user to copy and commit
+   - Follow the existing commit message format with:
+     - Concise title describing the changes
+     - Bulleted list of specific changes grouped by category
+     - Technical details where relevant
+     - Standard footer with Claude Code attribution
+   - Do NOT wait for user to ask - provide commit message proactively at the end of work
+   - This streamlines the git workflow and ensures consistent commit history
+
 ## Technology Stack
 
 - **Frontend**: Next.js 14+ with TypeScript, App Router, Tailwind CSS

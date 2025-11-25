@@ -31,13 +31,24 @@ export default function LoginPage() {
   const [formStartTime] = useState(Date.now()); // Track form load time
   const [shouldRedirect, setShouldRedirect] = useState(false);
 
+  // Get redirect URL from query parameters (set by protected pages)
+  const [redirectPath, setRedirectPath] = useState('/profile');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    if (redirect) {
+      setRedirectPath(redirect);
+    }
+  }, []);
+
   // Only redirect if authenticated AND auth has finished loading
   // This prevents redirect loops when token is invalid
   useEffect(() => {
     if (!authLoading && isAuthenticated && shouldRedirect) {
-      router.push('/profile');
+      router.push(redirectPath);
     }
-  }, [isAuthenticated, authLoading, shouldRedirect, router]);
+  }, [isAuthenticated, authLoading, shouldRedirect, redirectPath, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +83,7 @@ export default function LoginPage() {
       await login(email, password);
       // Set flag to allow redirect after successful login
       setShouldRedirect(true);
-      router.push('/profile');
+      router.push(redirectPath);
     } catch (err: any) {
       // Check if the error is about email verification
       if (err.message && err.message.includes('verify your email')) {
