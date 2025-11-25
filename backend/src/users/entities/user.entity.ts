@@ -141,7 +141,15 @@ export class User {
 
   // ========== Timestamps ==========
 
-  /** When the user account was created */
+  /**
+   * When the user joined TixPeer (displayed publicly on profile)
+   * Defaults to account creation time
+   * Separate from createdAt for flexibility (e.g., if migrating from another platform)
+   */
+  @CreateDateColumn()
+  joinedDate: Date;
+
+  /** When the user account was created (internal tracking) */
   @CreateDateColumn()
   createdAt: Date;
 
