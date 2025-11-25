@@ -26,7 +26,7 @@ import type { Area } from 'react-easy-crop';
 
 export default function Profile() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading, logout, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState('active');
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userListings, setUserListings] = useState<any[]>([]);
@@ -229,6 +229,9 @@ export default function Profile() {
 
       // Update current user with new avatar from response
       setCurrentUser(response.user);
+
+      // Update AuthContext and localStorage with new avatar
+      updateUser({ avatar: response.avatar });
 
       // Close dialog and reset state
       setAvatarDialogOpen(false);

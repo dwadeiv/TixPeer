@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Ticket, Search, Plus, User, MessageSquare, Home, MapPin, Calendar, LogOut, Settings } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { LocationSelector } from './LocationSelector';
 import { useLocation } from '@/contexts/LocationContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -238,8 +239,11 @@ export default function Header() {
               {/* User Menu - Shows dropdown when authenticated, login button when not */}
               {isAuthenticated && user ? (
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground size-9 outline-none">
-                    <User className="size-5" />
+                  <DropdownMenuTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-all hover:ring-2 hover:ring-purple-200 outline-none">
+                    <Avatar className="size-9">
+                      <AvatarImage src={user.avatar} />
+                      <AvatarFallback>{user.name[0]}</AvatarFallback>
+                    </Avatar>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel>
@@ -319,21 +323,24 @@ export default function Header() {
             </button>
           </Link>
           {/* User menu - Different behavior based on authentication status */}
-          {isAuthenticated ? (
+          {isAuthenticated && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger
                 className={`flex-1 flex flex-col items-center justify-center w-full h-full gap-1 ${
                   isActive('/profile') ? 'text-purple-600' : 'text-slate-600'
                 }`}
               >
-                <User className="size-5" />
+                <Avatar className="size-6">
+                  <AvatarImage src={user.avatar} />
+                  <AvatarFallback className="text-xs">{user.name[0]}</AvatarFallback>
+                </Avatar>
                 <span className="text-xs">Account</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" side="top" className="w-56 mb-2">
                 <DropdownMenuLabel>
                   <div className="flex flex-col">
-                    <span className="font-medium">{user?.name}</span>
-                    <span className="text-xs text-slate-500 font-normal">{user?.email}</span>
+                    <span className="font-medium">{user.name}</span>
+                    <span className="text-xs text-slate-500 font-normal">{user.email}</span>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
