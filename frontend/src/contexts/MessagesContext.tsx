@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { Message, Conversation } from '@/types';
@@ -66,6 +66,7 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
 
   // Current conversation
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
+  const currentConversationRef = useRef<string | null>(null); // Track current conversation ID with ref
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
 
@@ -124,12 +125,16 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
     newSocket.on('message:received', ({ message }: { message: Message }) => {
       // New message received from another user
       console.log('Message received:', message);
+      console.log('Current conversation ref:', currentConversationRef.current);
 
       // Add to messages if we're viewing this conversation
-      if (currentConversation?.id === message.conversationId) {
+      if (currentConversationRef.current === message.conversationId) {
+        console.log('Adding message to current conversation');
         setMessages((prev) => [...prev, message]);
-        // Auto-mark as read if conversation is open
+        // Auto-mark as read
         newSocket.emit('messages:markRead', { conversationId: message.conversationId });
+      } else {
+        console.log('Not adding message - different conversation');
       }
 
       refreshConversations();
@@ -152,13 +157,12 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
     // Read receipts
     newSocket.on('messages:read', ({ conversationId, messageIds }: { conversationId: string; messageIds: string[] }) => {
       // Mark messages as read in UI
-      if (currentConversation?.id === conversationId) {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            messageIds.includes(msg.id) ? { ...msg, isRead: true, readAt: new Date().toISOString() } : msg
-          )
-        );
-      }
+      // Use callback to get current state
+      setMessages((prev) =>
+        prev.map((msg) =>
+          messageIds.includes(msg.id) ? { ...msg, isRead: true, readAt: new Date().toISOString() } : msg
+        )
+      );
     });
 
     // Online status
@@ -300,6 +304,14 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
       console.error('Error refreshing unread count:', error);
     }
   }, [isAuthenticated]);
+
+  /**
+   * Update ref when current conversation changes
+   */
+  useEffect(() => {
+    currentConversationRef.current = currentConversation?.id || null;
+    console.log('Current conversation changed to:', currentConversationRef.current);
+  }, [currentConversation]);
 
   /**
    * Load conversations on mount
