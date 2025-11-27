@@ -174,6 +174,7 @@ export default function EventDetail() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
+                          router.push(`/messages?userId=${listing.userId}`);
                         }}
                       >
                         <MessageSquare className="size-4" />
@@ -237,6 +238,7 @@ export default function EventDetail() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
+                          router.push(`/messages?userId=${listing.userId}`);
                         }}
                       >
                         <MessageSquare className="size-4" />
@@ -295,6 +297,7 @@ export default function EventDetail() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
+                          router.push(`/messages?userId=${listing.userId}`);
                         }}
                       >
                         <MessageSquare className="size-4" />

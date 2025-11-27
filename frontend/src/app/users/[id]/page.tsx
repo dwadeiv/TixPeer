@@ -11,11 +11,15 @@ import { ArrowLeft, Calendar, MapPin, Star, CheckCircle, Clock, Mail } from 'luc
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 import { api } from '@/lib/api';
 import { User, Listing } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { useMessages } from '@/contexts/MessagesContext';
 
 export default function UserProfile() {
   const params = useParams();
   const router = useRouter();
   const userId = params.id as string;
+  const { user: currentUser, isAuthenticated } = useAuth();
+  const { conversations } = useMessages();
   const [user, setUser] = useState<User | null>(null);
   const [userListings, setUserListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -131,7 +135,30 @@ export default function UserProfile() {
                 </div>
               </div>
 
-              <Button className="w-full gap-2">
+              <Button
+                className="w-full gap-2"
+                onClick={async () => {
+                  if (!isAuthenticated) {
+                    router.push('/login?redirect=' + window.location.pathname);
+                    return;
+                  }
+
+                  // Check if conversation already exists
+                  const existingConversation = conversations.find(
+                    (conv) =>
+                      (conv.user1Id === userId && conv.user2Id === currentUser?.id) ||
+                      (conv.user2Id === userId && conv.user1Id === currentUser?.id)
+                  );
+
+                  if (existingConversation) {
+                    // Navigate to existing conversation
+                    router.push(`/messages?conversationId=${existingConversation.id}`);
+                  } else {
+                    // Start new conversation - navigate to messages and let user send first message
+                    router.push(`/messages?userId=${userId}`);
+                  }
+                }}
+              >
                 <Mail className="size-4" />
                 Send Message
               </Button>

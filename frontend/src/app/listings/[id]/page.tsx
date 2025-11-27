@@ -12,13 +12,16 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Calendar, MapPin, Star, Flag, Share2, Send } from 'lucide-react';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 import { api } from '@/lib/api';
-import { Listing, Message } from '@/types';
+import { Listing } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { useMessages } from '@/contexts/MessagesContext';
 
 export default function ListingDetail() {
   const params = useParams();
   const router = useRouter();
+  const { user: currentUser, isAuthenticated } = useAuth();
+  const { conversations } = useMessages();
   const [listing, setListing] = useState<Listing | null>(null);
-  const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,15 +33,6 @@ export default function ListingDetail() {
         // Fetch listing data
         const listingData = await api.getListing(listingId);
         setListing(listingData);
-
-        // Try to fetch current user profile (optional, for messaging feature)
-        try {
-          const userData = await api.getProfile();
-          setCurrentUser(userData);
-        } catch (error) {
-          // User not logged in - that's okay, they can still view the listing
-          setCurrentUser(null);
-        }
       } catch (error) {
         console.error('Error fetching listing:', error);
       } finally {
@@ -48,16 +42,6 @@ export default function ListingDetail() {
 
     fetchData();
   }, [params.id]);
-
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      senderId: listing?.userId || '',
-      text: "Hey! Thanks for reaching out. I'm happy to discuss a trade.",
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-    },
-  ]);
-  const [newMessage, setNewMessage] = useState('');
 
   if (loading) {
     return (
@@ -71,19 +55,38 @@ export default function ListingDetail() {
     return <div>Listing not found</div>;
   }
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !currentUser) return;
+  /**
+   * Handle clicking "Contact Seller" button
+   * - Redirects to login if not authenticated
+   * - Navigates to existing conversation if one exists
+   * - Otherwise creates new conversation flow
+   */
+  const handleContactSeller = () => {
+    if (!isAuthenticated) {
+      router.push('/login?redirect=' + window.location.pathname);
+      return;
+    }
 
-    const message: Message = {
-      id: Date.now().toString(),
-      senderId: currentUser.id,
-      text: newMessage,
-      timestamp: new Date().toISOString(),
-    };
+    // Don't allow messaging yourself
+    if (currentUser?.id === listing.userId) {
+      alert("You can't message yourself!");
+      return;
+    }
 
-    setMessages([...messages, message]);
-    setNewMessage('');
+    // Check if conversation already exists with listing owner
+    const existingConversation = conversations.find(
+      (conv) =>
+        (conv.user1Id === listing.userId && conv.user2Id === currentUser?.id) ||
+        (conv.user2Id === listing.userId && conv.user1Id === currentUser?.id)
+    );
+
+    if (existingConversation) {
+      // Navigate to existing conversation
+      router.push(`/messages?conversationId=${existingConversation.id}`);
+    } else {
+      // Start new conversation with listing owner
+      router.push(`/messages?userId=${listing.userId}`);
+    }
   };
 
   return (
@@ -211,69 +214,51 @@ export default function ListingDetail() {
           </Card>
         </div>
 
-        {/* Chat Sidebar */}
+        {/* Contact Sidebar */}
         <div className="lg:col-span-1">
           <Card className="p-6 sticky top-24">
-            <h3 className="mb-4">Start a Conversation</h3>
-            <p className="text-sm text-slate-600 mb-4">
+            <h3 className="mb-4">Interested in this listing?</h3>
+            <p className="text-sm text-slate-600 mb-6">
               Connect with {listing.user.name} to discuss the trade details
             </p>
 
-            {/* Messages */}
-            <div className="space-y-4 mb-4 max-h-96 overflow-y-auto">
-              {messages.map((message) => {
-                const isCurrentUser = currentUser && message.senderId === currentUser.id;
-                const sender = isCurrentUser ? currentUser : listing.user;
+            {/* Contact Button */}
+            <Button
+              onClick={handleContactSeller}
+              className="w-full gap-2 mb-4"
+              disabled={currentUser?.id === listing.userId}
+            >
+              <Send className="size-4" />
+              {currentUser?.id === listing.userId ? "Your Listing" : "Contact Seller"}
+            </Button>
 
-                return (
-                  <div
-                    key={message.id}
-                    className={`flex gap-3 ${isCurrentUser ? 'flex-row-reverse' : ''}`}
-                  >
-                    <Avatar className="size-8">
-                      <AvatarImage src={sender.avatar} />
-                      <AvatarFallback>{sender.name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className={`flex-1 ${isCurrentUser ? 'text-right' : ''}`}>
-                      <div
-                        className={`inline-block p-3 rounded-lg ${
-                          isCurrentUser
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-slate-100 text-slate-900'
-                        }`}
-                      >
-                        <p className="text-sm">{message.text}</p>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {new Date(message.timestamp).toLocaleTimeString('en-US', {
-                          hour: 'numeric',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Message Input */}
-            <form onSubmit={handleSendMessage} className="space-y-3">
-              <Textarea
-                placeholder="Type your message..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                rows={3}
-              />
-              <Button type="submit" className="w-full gap-2">
-                <Send className="size-4" />
-                Send Message
-              </Button>
-            </form>
-
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+            <div className="p-3 bg-blue-50 rounded-lg">
               <p className="text-xs text-slate-700">
                 💡 Be clear about your expectations and arrange ticket transfer through official platforms only.
               </p>
+            </div>
+
+            {/* Listing Stats */}
+            <Separator className="my-4" />
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-600">Listed</span>
+                <span className="font-medium">
+                  {new Date(listing.createdAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-600">Status</span>
+                <Badge
+                  variant={listing.status === 'active' ? 'default' : 'secondary'}
+                  className={listing.status === 'active' ? 'bg-green-100 text-green-700' : ''}
+                >
+                  {listing.status}
+                </Badge>
+              </div>
             </div>
           </Card>
         </div>

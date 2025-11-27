@@ -17,7 +17,7 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
 ### Priority 1: Session Setup
 
 1. **Session Initialization Protocol**
-   - At the start of every new session, read ARCHITECTURE.md to understand the current system state
+   - At the start of every new session, read docs/ARCHITECTURE.md to understand the current system state
    - This provides context on:
      - Overall system architecture and component relationships
      - Database schema and entity relationships
@@ -25,7 +25,8 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
      - Technology stack and external services
      - Key design decisions and rationale
    - Reading the architecture document ensures faster onboarding and prevents reinventing solutions
-   - After reading ARCHITECTURE.md, be prepared to answer questions and make informed decisions based on the documented architecture
+   - After reading docs/ARCHITECTURE.md, be prepared to answer questions and make informed decisions based on the documented architecture
+   - Additional documentation is available in the docs/ directory (see docs/README.md for index)
 
 ---
 
@@ -39,7 +40,7 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
    - This ensures accountability and continuous improvement in following established guidelines
 
 3. **Documentation Updates Require Approval**
-   - When development changes warrant updates to existing documentation files (CLAUDE.md, CACHING.md, etc.)
+   - When development changes warrant updates to existing documentation files (CLAUDE.md, docs/*.md, etc.)
    - ALWAYS ask for permission BEFORE updating any documentation
    - Do NOT automatically update documentation without explicit approval
    - This ensures proper control over what gets documented and when
