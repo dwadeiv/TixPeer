@@ -119,6 +119,15 @@ export default function Messages() {
   }, [messages]);
 
   /**
+   * Clear current conversation when leaving the messages page
+   */
+  useEffect(() => {
+    return () => {
+      setCurrentConversation(null);
+    };
+  }, [setCurrentConversation]);
+
+  /**
    * Handle conversation selection
    */
   const handleSelectConversation = async (conversation: Conversation) => {
