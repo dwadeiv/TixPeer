@@ -303,6 +303,20 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
   }, [socket, connected, typingTimeout]);
 
   /**
+   * Refresh unread count from server
+   */
+  const refreshUnreadCount = useCallback(async () => {
+    if (!isAuthenticated) return;
+
+    try {
+      const data = await api.getUnreadCount();
+      setTotalUnreadCount(data.count);
+    } catch (error) {
+      // Silently fail - unread count will be refreshed on next successful call
+    }
+  }, [isAuthenticated]);
+
+  /**
    * Mark conversation as read
    * Uses optimistic updates to immediately clear badges in UI,
    * then confirms with server
@@ -366,20 +380,6 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
       refreshUnreadCount();
     }, 1000);
   }, [socket, connected, user, conversations, refreshUnreadCount]);
-
-  /**
-   * Refresh unread count from server
-   */
-  const refreshUnreadCount = useCallback(async () => {
-    if (!isAuthenticated) return;
-
-    try {
-      const data = await api.getUnreadCount();
-      setTotalUnreadCount(data.count);
-    } catch (error) {
-      // Silently fail - unread count will be refreshed on next successful call
-    }
-  }, [isAuthenticated]);
 
   /**
    * Update ref when current conversation changes
