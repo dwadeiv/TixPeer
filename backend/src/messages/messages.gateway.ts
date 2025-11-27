@@ -8,7 +8,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, Logger } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { WsJwtGuard } from '../auth/guards/ws-jwt.guard';
 import { UsersService } from '../users/users.service';
@@ -35,6 +35,8 @@ import { UsersService } from '../users/users.service';
 export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
+
+  private readonly logger = new Logger(MessagesGateway.name);
 
   /**
    * Map of userId -> socketId for tracking online users
@@ -63,14 +65,13 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
       const userId = client.handshake.auth?.userId;
 
       if (!userId) {
-        console.log('WebSocket connection rejected: No user ID in auth');
+        this.logger.warn('WebSocket connection rejected: No user ID in auth');
         client.disconnect();
         return;
       }
 
       // Track this user's socket connection
       this.userSockets.set(userId, client.id);
-      console.log(`User ${userId} connected with socket ${client.id}`);
 
       // Update user's online status and lastSeen in database
       await this.usersService.updateOnlineStatus(userId, true);
@@ -90,7 +91,7 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
         })),
       });
     } catch (error) {
-      console.error('Error in handleConnection:', error);
+      this.logger.error('Error in handleConnection', error);
       client.disconnect();
     }
   }
@@ -112,8 +113,6 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     if (disconnectedUserId) {
-      console.log(`User ${disconnectedUserId} disconnected`);
-
       // Update user's online status and lastSeen in database
       this.usersService.updateOnlineStatus(disconnectedUserId, false);
 
@@ -169,7 +168,7 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
 
       return { success: true, message };
     } catch (error) {
-      console.error('Error sending message:', error);
+      this.logger.error('Error sending message', error);
       return { error: 'Failed to send message' };
     }
   }
@@ -273,7 +272,7 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
 
       return { success: true, count: updatedMessages.length };
     } catch (error) {
-      console.error('Error marking messages as read:', error);
+      this.logger.error('Error marking messages as read', error);
       return { error: 'Failed to mark messages as read' };
     }
   }
