@@ -17,15 +17,21 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
 ### Priority 1: Session Setup
 
 1. **Session Initialization Protocol**
-   - At the start of every new session, read docs/ARCHITECTURE.md to understand the current system state
-   - This provides context on:
-     - Overall system architecture and component relationships
-     - Database schema and entity relationships
-     - Available API endpoints and their purposes
-     - Technology stack and external services
-     - Key design decisions and rationale
-   - Reading the architecture document ensures faster onboarding and prevents reinventing solutions
-   - After reading docs/ARCHITECTURE.md, be prepared to answer questions and make informed decisions based on the documented architecture
+   - At the start of every new session, read the following documents:
+     - **docs/ARCHITECTURE.md** - Understand the current system state:
+       - Overall system architecture and component relationships
+       - Database schema and entity relationships
+       - Available API endpoints and their purposes
+       - Technology stack and external services
+       - Key design decisions and rationale
+     - **docs/IMPLEMENTATION_PATTERNS.md** - Understand coding patterns and best practices:
+       - Frontend patterns (React Context, Optimistic Updates, API Client, etc.)
+       - Backend patterns (NestJS modules, DTOs, Guards, Logging, etc.)
+       - WebSocket patterns (connection management, reconnection, events)
+       - Database patterns (repositories, query builders, eager loading)
+       - Security and authentication patterns
+   - Reading these documents ensures faster onboarding, consistent code patterns, and prevents reinventing solutions
+   - After reading both documents, be prepared to answer questions and make informed decisions based on the documented architecture and patterns
    - Additional documentation is available in the docs/ directory (see docs/README.md for index)
 
 ---
@@ -122,21 +128,36 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
 ### Priority 5: Documentation & Tracking
 
 10. **Architecture Documentation Maintenance**
-   - When making architectural changes, update ARCHITECTURE.md to reflect the changes
-   - Architectural changes include:
-     - New modules, services, or controllers
-     - Database schema changes (new tables, columns, relationships)
-     - New API endpoints or endpoint modifications
-     - External service integrations (Cloudinary, SendGrid, etc.)
-     - Authentication/authorization changes
-     - Data flow modifications
-   - Keep the "Last Updated" date current at the top of ARCHITECTURE.md
-   - Update relevant sections: API structure, database schema, tech stack, data flows, etc.
-   - Maintain consistency between code implementation and documentation
-   - This ensures the architecture document stays accurate and useful for understanding the system
+    - When making architectural changes, update docs/ARCHITECTURE.md to reflect the changes
+    - Architectural changes include:
+      - New modules, services, or controllers
+      - Database schema changes (new tables, columns, relationships)
+      - New API endpoints or endpoint modifications
+      - External service integrations (Cloudinary, SendGrid, etc.)
+      - Authentication/authorization changes
+      - Data flow modifications
+    - Keep the "Last Updated" date current at the top of docs/ARCHITECTURE.md
+    - Update relevant sections: API structure, database schema, tech stack, data flows, etc.
+    - Maintain consistency between code implementation and documentation
+    - This ensures the architecture document stays accurate and useful for understanding the system
 
-11. **Create Proper Notes for Tracking**
-   - When the user says "make a note", ALWAYS create a proper tracking note in an appropriate file
+11. **Implementation Patterns Documentation Maintenance**
+    - When introducing new code patterns or best practices, update docs/IMPLEMENTATION_PATTERNS.md
+    - Pattern changes that warrant documentation include:
+      - New state management approaches (React Context, custom hooks, etc.)
+      - New backend patterns (guards, interceptors, decorators, etc.)
+      - New error handling or logging strategies
+      - New WebSocket or real-time patterns
+      - New database query patterns or optimizations
+      - New security patterns or authentication flows
+      - New API design patterns (pagination, filtering, caching, etc.)
+    - When modifying existing patterns, update the corresponding documentation section
+    - Include code examples with file locations for each pattern
+    - Keep the "Last Updated" date current at the top of docs/IMPLEMENTATION_PATTERNS.md
+    - This ensures new engineers can understand and replicate established patterns
+
+12. **Create Proper Notes for Tracking**
+    - When the user says "make a note", ALWAYS create a proper tracking note in an appropriate file
    - Use or create a TODO.md file in the relevant directory (frontend/TODO.md, backend/TODO.md, or root TODO.md)
    - Notes should include:
      - Clear description of the issue or future work needed
