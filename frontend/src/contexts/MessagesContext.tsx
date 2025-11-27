@@ -94,30 +94,40 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Create WebSocket connection
+    // Create WebSocket connection with reconnection settings
     const newSocket = io('http://localhost:3001/messages', {
       auth: {
         token: localStorage.getItem('authToken'),
         userId: user.id,
       },
       transports: ['websocket', 'polling'],
+      // Reconnection settings for reliability
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
     });
 
     // Connection events
     newSocket.on('connect', () => {
-      console.log('WebSocket connected');
       setConnected(true);
+      // On reconnection, refresh data to catch any missed messages
+      refreshConversations();
+      refreshUnreadCount();
     });
 
     newSocket.on('disconnect', () => {
-      console.log('WebSocket disconnected');
+      setConnected(false);
+    });
+
+    // Handle connection errors gracefully
+    newSocket.on('connect_error', () => {
       setConnected(false);
     });
 
     // Message events
     newSocket.on('message:sent', ({ message }: { message: Message }) => {
-      // Message we sent was confirmed by server
-      console.log('Message sent:', message);
+      // Message we sent was confirmed by server - add to local state
       setMessages((prev) => [...prev, message]);
       refreshConversations();
     });
@@ -155,7 +165,7 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
           refreshUnreadCount();
         }, 500);
       } else {
-        console.log('Not adding message - different conversation');
+        // Message is for a different conversation - just refresh counts
         refreshConversations();
         refreshUnreadCount();
       }
@@ -294,45 +304,89 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Mark conversation as read
+   * Uses optimistic updates to immediately clear badges in UI,
+   * then confirms with server
    */
   const markConversationAsRead = useCallback(async (conversationId: string) => {
-    if (!socket || !connected) {
-      // Fallback to HTTP if WebSocket not available
-      try {
-        await api.markConversationAsRead(conversationId);
-        refreshUnreadCount();
-      } catch (error) {
-        console.error('Error marking conversation as read:', error);
-      }
-      return;
+    if (!user) return;
+
+    // OPTIMISTIC UPDATE: Calculate unread count for this conversation before clearing
+    const conversation = conversations.find(c => c.id === conversationId);
+    const unreadInConversation = conversation
+      ? (conversation.user1Id === user.id ? conversation.unreadCountUser1 : conversation.unreadCountUser2)
+      : 0;
+
+    // 1. Optimistically update conversations list - clear unread count for this conversation
+    setConversations((prev) =>
+      prev.map((conv) => {
+        if (conv.id === conversationId) {
+          return {
+            ...conv,
+            unreadCountUser1: conv.user1Id === user.id ? 0 : conv.unreadCountUser1,
+            unreadCountUser2: conv.user2Id === user.id ? 0 : conv.unreadCountUser2,
+          };
+        }
+        return conv;
+      })
+    );
+
+    // 2. Optimistically update total unread count in header
+    if (unreadInConversation > 0) {
+      setTotalUnreadCount((prev) => Math.max(0, prev - unreadInConversation));
     }
 
-    socket.emit('messages:markRead', { conversationId });
-    refreshUnreadCount();
-  }, [socket, connected]);
+    // 3. Send to server (WebSocket preferred, HTTP fallback)
+    if (socket && connected) {
+      socket.emit('messages:markRead', { conversationId });
+    } else {
+      try {
+        await api.markConversationAsRead(conversationId);
+      } catch (error) {
+        // Revert optimistic update on error
+        if (conversation) {
+          setConversations((prev) =>
+            prev.map((conv) => {
+              if (conv.id === conversationId) {
+                return {
+                  ...conv,
+                  unreadCountUser1: conversation.unreadCountUser1,
+                  unreadCountUser2: conversation.unreadCountUser2,
+                };
+              }
+              return conv;
+            })
+          );
+          setTotalUnreadCount((prev) => prev + unreadInConversation);
+        }
+      }
+    }
+
+    // 4. Refresh from server after delay to confirm (handles any sync issues)
+    setTimeout(() => {
+      refreshUnreadCount();
+    }, 1000);
+  }, [socket, connected, user, conversations, refreshUnreadCount]);
 
   /**
-   * Refresh unread count
+   * Refresh unread count from server
    */
   const refreshUnreadCount = useCallback(async () => {
     if (!isAuthenticated) return;
 
     try {
-      console.log('[refreshUnreadCount] Fetching unread count...');
       const data = await api.getUnreadCount();
-      console.log('[refreshUnreadCount] Got count:', data.count);
       setTotalUnreadCount(data.count);
     } catch (error) {
-      console.error('Error refreshing unread count:', error);
+      // Silently fail - unread count will be refreshed on next successful call
     }
   }, [isAuthenticated]);
 
   /**
    * Update ref when current conversation changes
+   * Ref is used to access current conversation ID in WebSocket callbacks
    */
   useEffect(() => {
     currentConversationRef.current = currentConversation?.id || null;
-    console.log('Current conversation changed to:', currentConversationRef.current);
   }, [currentConversation]);
 
   /**
