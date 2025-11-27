@@ -122,23 +122,43 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
       refreshConversations();
     });
 
-    newSocket.on('message:received', ({ message }: { message: Message }) => {
+    newSocket.on('message:received', async ({ message }: { message: Message }) => {
       // New message received from another user
-      console.log('Message received:', message);
-      console.log('Current conversation ref:', currentConversationRef.current);
 
       // Add to messages if we're viewing this conversation
       if (currentConversationRef.current === message.conversationId) {
-        console.log('Adding message to current conversation');
         setMessages((prev) => [...prev, message]);
+
         // Auto-mark as read
         newSocket.emit('messages:markRead', { conversationId: message.conversationId });
+
+        // Optimistically update conversation list to clear unread badge immediately
+        setConversations((prev) =>
+          prev.map((conv) => {
+            if (conv.id === message.conversationId) {
+              return {
+                ...conv,
+                lastMessageText: message.text,
+                lastMessageAt: message.createdAt,
+                lastMessageSenderId: message.senderId,
+                unreadCountUser1: conv.user1Id === message.receiverId ? 0 : conv.unreadCountUser1,
+                unreadCountUser2: conv.user2Id === message.receiverId ? 0 : conv.unreadCountUser2,
+              };
+            }
+            return conv;
+          })
+        );
+
+        // Refresh from server to confirm
+        setTimeout(() => {
+          refreshConversations();
+          refreshUnreadCount();
+        }, 500);
       } else {
         console.log('Not adding message - different conversation');
+        refreshConversations();
+        refreshUnreadCount();
       }
-
-      refreshConversations();
-      refreshUnreadCount();
     });
 
     // Typing indicators
@@ -298,7 +318,9 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated) return;
 
     try {
+      console.log('[refreshUnreadCount] Fetching unread count...');
       const data = await api.getUnreadCount();
+      console.log('[refreshUnreadCount] Got count:', data.count);
       setTotalUnreadCount(data.count);
     } catch (error) {
       console.error('Error refreshing unread count:', error);
