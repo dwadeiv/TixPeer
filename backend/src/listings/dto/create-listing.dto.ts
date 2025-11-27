@@ -6,9 +6,10 @@ export class CreateListingDto {
   @IsEnum(['offer', 'request'])
   type: 'offer' | 'request';
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsString()
-  userId: string;
+  @IsOptional()
+  userId?: string;
 
   @ApiProperty()
   @IsString()

@@ -125,6 +125,23 @@ export class User {
   @Column({ default: false })
   verifiedUser: boolean;
 
+  // ========== Online Status & Activity ==========
+
+  /**
+   * Whether the user is currently online (connected via WebSocket)
+   * Updated automatically when user connects/disconnects
+   */
+  @Column({ default: false })
+  isOnline: boolean;
+
+  /**
+   * Last time the user was active (sent a message, viewed listings, etc.)
+   * Used to show "Last seen X minutes ago" similar to Facebook Messenger
+   * Updated on WebSocket events and important user actions
+   */
+  @Column({ type: 'timestamp', nullable: true })
+  lastSeen: Date;
+
   // ========== Relations ==========
 
   /** Legacy tickets this user is selling (from old Ticket entity) */
