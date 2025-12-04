@@ -10,6 +10,9 @@ export interface User {
   favoriteEvents?: string[];
   badges?: string[];
   responseTime?: string;
+  responseRate?: number;
+  conversationsReceived?: number;
+  conversationsReplied?: number;
   verifiedUser?: boolean;
   isOnline?: boolean;
   lastSeen?: string;

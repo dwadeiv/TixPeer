@@ -18,6 +18,9 @@ interface User {
   email: string;
   name: string;
   avatar?: string;
+  responseRate?: number;
+  conversationsReceived?: number;
+  conversationsReplied?: number;
 }
 
 interface AuthContextType {

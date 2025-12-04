@@ -73,4 +73,66 @@ export class UsersService {
       lastSeen: new Date(),
     });
   }
+
+  /**
+   * Increment the count of conversations received by a user
+   * Called when another user initiates a new conversation with this user
+   * @param userId - User ID who received a new conversation
+   */
+  async incrementConversationsReceived(userId: string): Promise<void> {
+    await this.usersRepository.increment({ id: userId }, 'conversationsReceived', 1);
+    await this.recalculateResponseRate(userId);
+  }
+
+  /**
+   * Increment the count of conversations replied to by a user
+   * Called when user sends their first reply in a conversation they didn't initiate
+   * @param userId - User ID who replied to a conversation
+   */
+  async incrementConversationsReplied(userId: string): Promise<void> {
+    await this.usersRepository.increment({ id: userId }, 'conversationsReplied', 1);
+    await this.recalculateResponseRate(userId);
+  }
+
+  /**
+   * Recalculate and update a user's response rate
+   * Response rate = (conversationsReplied / conversationsReceived) * 100
+   * New users with 0 conversations received default to 100%
+   * @param userId - User ID to recalculate response rate for
+   */
+  async recalculateResponseRate(userId: string): Promise<void> {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      select: ['id', 'conversationsReceived', 'conversationsReplied'],
+    });
+
+    if (!user) return;
+
+    // Default to 100% if no conversations received yet
+    let responseRate = 100.0;
+
+    if (user.conversationsReceived > 0) {
+      responseRate = (user.conversationsReplied / user.conversationsReceived) * 100;
+      // Cap at 100% (shouldn't happen, but safety check)
+      responseRate = Math.min(100, responseRate);
+      // Round to 2 decimal places
+      responseRate = Math.round(responseRate * 100) / 100;
+    }
+
+    await this.usersRepository.update(userId, { responseRate });
+  }
+
+  /**
+   * Get a user's response rate
+   * @param userId - User ID to get response rate for
+   * @returns Response rate as a percentage (0-100)
+   */
+  async getResponseRate(userId: string): Promise<number> {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      select: ['responseRate'],
+    });
+
+    return user?.responseRate ?? 100;
+  }
 }
