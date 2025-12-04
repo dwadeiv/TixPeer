@@ -465,7 +465,7 @@ export default function Profile() {
                 <div className="text-sm text-slate-600">Completed</div>
               </Card>
               <Card className="p-4 bg-slate-50">
-                <div className="text-2xl mb-1">98%</div>
+                <div className="text-2xl mb-1">{Math.round(user?.responseRate ?? 100)}%</div>
                 <div className="text-sm text-slate-600">Response Rate</div>
               </Card>
             </div>

@@ -123,15 +123,10 @@ export default function UserProfile() {
                     <p className="text-xs sm:text-sm text-slate-600">Completed Trades</p>
                   </div>
 
-                  {user.responseTime && (
-                    <div className="bg-slate-50 rounded-lg p-4 min-w-0">
-                      <div className="flex items-center justify-center gap-1 mb-1">
-                        <Clock className="size-4 flex-shrink-0" />
-                        <p className="text-sm font-medium whitespace-nowrap">{user.responseTime}</p>
-                      </div>
-                      <p className="text-xs sm:text-sm text-slate-600">Response Time</p>
-                    </div>
-                  )}
+                  <div className="bg-slate-50 rounded-lg p-4 min-w-0">
+                    <p className="text-2xl mb-1 whitespace-nowrap">{Math.round(user.responseRate ?? 100)}%</p>
+                    <p className="text-xs sm:text-sm text-slate-600">Response Rate</p>
+                  </div>
                 </div>
               </div>
 

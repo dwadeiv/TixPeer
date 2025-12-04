@@ -119,6 +119,29 @@ export class User {
   responseTime: string;
 
   /**
+   * Response rate as a percentage (0-100)
+   * Calculated as: (conversations replied to / conversations received) * 100
+   * Only counts conversations where the other user sent the first message
+   * Updated when user sends a reply to a new conversation
+   */
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 100.0 })
+  responseRate: number;
+
+  /**
+   * Total number of conversations where another user messaged this user first
+   * Used to calculate response rate
+   */
+  @Column({ default: 0 })
+  conversationsReceived: number;
+
+  /**
+   * Number of conversations this user has replied to (where they were not the initiator)
+   * Used to calculate response rate
+   */
+  @Column({ default: 0 })
+  conversationsReplied: number;
+
+  /**
    * Whether user has completed identity/phone verification
    * Verified users get a badge and higher trust from other users
    */

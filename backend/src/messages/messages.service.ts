@@ -4,6 +4,7 @@ import { Repository, IsNull, Not } from 'typeorm';
 import { Message } from './entities/message.entity';
 import { Conversation } from './entities/conversation.entity';
 import { GetMessagesDto } from './dto/get-messages.dto';
+import { UsersService } from '../users/users.service';
 
 /**
  * Messages Service
@@ -13,6 +14,7 @@ import { GetMessagesDto } from './dto/get-messages.dto';
  * - Sending and retrieving messages
  * - Marking messages as read/delivered
  * - Managing unread counts
+ * - Tracking response rates
  */
 @Injectable()
 export class MessagesService {
@@ -21,6 +23,7 @@ export class MessagesService {
     private messageRepository: Repository<Message>,
     @InjectRepository(Conversation)
     private conversationRepository: Repository<Conversation>,
+    private usersService: UsersService,
   ) {}
 
   /**
@@ -116,6 +119,7 @@ export class MessagesService {
   /**
    * Send a new message
    * Creates message, updates conversation metadata, increments unread count
+   * Also tracks response rates for the receiver
    *
    * @param senderId - ID of the user sending the message
    * @param receiverId - ID of the user receiving the message
@@ -129,6 +133,17 @@ export class MessagesService {
   ): Promise<Message> {
     // Find or create conversation
     const conversation = await this.findOrCreateConversation(senderId, receiverId);
+
+    // Check if this is the first message in the conversation (new conversation initiated)
+    const isFirstMessageInConversation = conversation.lastMessageAt === null;
+
+    // Check if sender has previously sent a message in this conversation
+    const senderHasPreviousMessage = await this.messageRepository.findOne({
+      where: {
+        conversationId: conversation.id,
+        senderId: senderId,
+      },
+    });
 
     // Create the message
     const message = this.messageRepository.create({
@@ -153,6 +168,17 @@ export class MessagesService {
     }
 
     await this.conversationRepository.save(conversation);
+
+    // Track response rate statistics
+    if (isFirstMessageInConversation) {
+      // New conversation: increment conversationsReceived for the receiver
+      // This means someone initiated a conversation with them
+      await this.usersService.incrementConversationsReceived(receiverId);
+    } else if (!senderHasPreviousMessage) {
+      // Sender is replying for the first time in an existing conversation
+      // This means they're responding to a conversation someone else started
+      await this.usersService.incrementConversationsReplied(senderId);
+    }
 
     // Reload message with relations for return
     const savedMessage = await this.messageRepository.findOne({

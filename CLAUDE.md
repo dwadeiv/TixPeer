@@ -59,22 +59,30 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
    - This ensures rules are permanently documented and consistently followed across sessions
    - Format rules clearly with bullet points explaining what to do and why
 
+5. **Git Commit and Push Restrictions**
+   - NEVER push to the remote repository unless the user explicitly asks
+   - NEVER include co-author attribution (e.g., "Co-Authored-By: Claude") in commit messages
+   - NEVER include "Generated with Claude Code" or similar attribution in commit messages
+   - Commit messages should appear as if written entirely by the user
+   - When preparing commits, only stage changes and create the commit locally
+   - Always let the user review and push manually
+
 ---
 
 ### Priority 3: Core Development Standards
 
-5. **End-to-End Functionality Required**
+6. **End-to-End Functionality Required**
    - Every feature must work completely from frontend → backend → database
    - No half-implemented features or placeholder functionality
    - Test the full user flow before considering a feature complete
 
-6. **NO Mock or Random Data in Frontend**
+7. **NO Mock or Random Data in Frontend**
    - All data displayed in the frontend MUST come from the backend API
    - NEVER use hardcoded arrays, faker libraries, or random data generators in frontend components
    - If a feature needs data, implement the backend endpoint and database model first
    - The only exception is initial seed data in `backend/src/database/seeds/` for development
 
-7. **Full-Stack Development Always**
+8. **Full-Stack Development Always**
    - Do not avoid backend work - implement what's required for the feature
    - Create/modify database entities, services, controllers, and API endpoints as needed
    - Ensure proper data flow: Database ↔ Backend API ↔ Frontend
@@ -84,7 +92,7 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
 
 ### Priority 4: Code Quality
 
-8. **Code Must Be Well-Commented**
+9. **Code Must Be Well-Commented**
    - Add clear comments explaining:
      - WHY code exists (business logic and reasoning)
      - WHAT complex operations do (step-by-step for non-obvious code)
@@ -108,7 +116,7 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
      }
      ```
 
-9. **Maintain Comments as Code Evolves**
+10. **Maintain Comments as Code Evolves**
    - When modifying code, ALWAYS update or remove related comments
    - Delete comments that no longer apply to the current implementation
    - Add new comments when introducing new logic or complexity
@@ -127,7 +135,7 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
 
 ### Priority 5: Documentation & Tracking
 
-10. **Architecture Documentation Maintenance**
+11. **Architecture Documentation Maintenance**
     - When making architectural changes, update docs/ARCHITECTURE.md to reflect the changes
     - Architectural changes include:
       - New modules, services, or controllers
@@ -141,7 +149,7 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
     - Maintain consistency between code implementation and documentation
     - This ensures the architecture document stays accurate and useful for understanding the system
 
-11. **Implementation Patterns Documentation Maintenance**
+12. **Implementation Patterns Documentation Maintenance**
     - When introducing new code patterns or best practices, update docs/IMPLEMENTATION_PATTERNS.md
     - Pattern changes that warrant documentation include:
       - New state management approaches (React Context, custom hooks, etc.)
@@ -156,7 +164,7 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
     - Keep the "Last Updated" date current at the top of docs/IMPLEMENTATION_PATTERNS.md
     - This ensures new engineers can understand and replicate established patterns
 
-12. **Create Proper Notes for Tracking**
+13. **Create Proper Notes for Tracking**
     - When the user says "make a note", ALWAYS create a proper tracking note in an appropriate file
    - Use or create a TODO.md file in the relevant directory (frontend/TODO.md, backend/TODO.md, or root TODO.md)
    - Notes should include:
@@ -167,14 +175,14 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
      - Priority level (High/Medium/Low)
    - This ensures important issues and future work are documented and not forgotten across sessions
 
-12. **Auto-generate Commit Messages**
+14. **Auto-generate Commit Messages**
    - After generating new code or files, automatically generate a commit message
    - Simply print the commit message for the user to copy and commit
    - Follow the existing commit message format with:
      - Concise title describing the changes
      - Bulleted list of specific changes grouped by category
      - Technical details where relevant
-     - Standard footer with Claude Code attribution
+   - Do NOT include any Claude attribution, co-author lines, or "Generated with" footers
    - Do NOT wait for user to ask - provide commit message proactively at the end of work
    - This streamlines the git workflow and ensures consistent commit history
 
