@@ -66,6 +66,10 @@ export default function Messages() {
    * Handle URL query parameters for starting/selecting conversations
    * - conversationId: Select existing conversation
    * - userId: Start new conversation with user
+   *
+   * Note: We intentionally exclude handleSelectConversation and setCurrentConversation
+   * from dependencies to prevent infinite re-render loops. The effect only needs to
+   * run when the URL params change or conversations load initially.
    */
   useEffect(() => {
     if (!isAuthenticated || !user) return;
@@ -74,9 +78,9 @@ export default function Messages() {
     const userId = searchParams.get('userId');
 
     if (conversationId && conversations.length > 0) {
-      // Select existing conversation by ID
+      // Select existing conversation by ID (only if not already selected)
       const conversation = conversations.find(c => c.id === conversationId);
-      if (conversation) {
+      if (conversation && currentConversation?.id !== conversationId) {
         handleSelectConversation(conversation);
         setNewConversationUserId(null);
         setNewConversationUser(null);
@@ -90,12 +94,15 @@ export default function Messages() {
       );
 
       if (existingConversation) {
-        // Select existing conversation
-        handleSelectConversation(existingConversation);
-        setNewConversationUserId(null);
-        setNewConversationUser(null);
-      } else {
+        // Select existing conversation (only if not already selected)
+        if (currentConversation?.id !== existingConversation.id) {
+          handleSelectConversation(existingConversation);
+          setNewConversationUserId(null);
+          setNewConversationUser(null);
+        }
+      } else if (newConversationUserId !== userId) {
         // New conversation - fetch user data and set up for first message
+        // Only fetch if we haven't already set up for this user
         const fetchUserForNewConversation = async () => {
           try {
             const userData = await api.getUser(userId);
@@ -109,7 +116,8 @@ export default function Messages() {
         fetchUserForNewConversation();
       }
     }
-  }, [isAuthenticated, user, conversations, searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, user, conversations, searchParams, currentConversation?.id, newConversationUserId]);
 
   /**
    * Auto-scroll to bottom when new messages arrive
