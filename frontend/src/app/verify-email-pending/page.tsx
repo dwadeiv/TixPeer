@@ -71,7 +71,7 @@ export default function VerifyEmailPendingPage() {
           </div>
           <h1 className="text-2xl font-bold mb-2">Verify Your Email</h1>
           <p className="text-slate-600">
-            We've sent a verification link to your email address
+            We&apos;ve sent a verification link to your email address
           </p>
         </div>
 
@@ -95,7 +95,7 @@ export default function VerifyEmailPendingPage() {
           </p>
           <p className="flex items-start gap-2">
             <span className="text-purple-600 font-bold mt-0.5">3.</span>
-            <span>You'll be redirected to login automatically</span>
+            <span>You&apos;ll be redirected to login automatically</span>
           </p>
         </div>
 
@@ -133,7 +133,7 @@ export default function VerifyEmailPendingPage() {
 
           {/* Help Text */}
           <div className="text-center text-sm text-slate-600">
-            <p>Didn't receive the email? Check your spam folder</p>
+            <p>Didn&apos;t receive the email? Check your spam folder</p>
           </div>
 
           {/* Back to Login Link */}

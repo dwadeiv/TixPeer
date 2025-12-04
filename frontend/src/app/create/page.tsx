@@ -120,7 +120,7 @@ export default function CreateListing() {
       <Card className="p-6 md:p-8">
         <h1 className="text-3xl mb-2">Create New Listing</h1>
         <p className="text-slate-600 mb-8">
-          Share your tickets or let the community know what you're looking for
+          Share your tickets or let the community know what you&apos;re looking for
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -139,7 +139,7 @@ export default function CreateListing() {
                 <RadioGroupItem value="request" id="request" />
                 <Label htmlFor="request" className="cursor-pointer flex-1">
                   <span>Request tickets I need</span>
-                  <p className="text-sm text-slate-600">You're looking for specific tickets</p>
+                  <p className="text-sm text-slate-600">You&apos;re looking for specific tickets</p>
                 </Label>
               </div>
             </RadioGroup>
@@ -161,7 +161,7 @@ export default function CreateListing() {
               </SelectContent>
             </Select>
             <p className="text-sm text-slate-600">
-              Don't see your event? <button type="button" className="text-purple-600 hover:underline">Add a new event</button>
+              Don&apos;t see your event? <button type="button" className="text-purple-600 hover:underline">Add a new event</button>
             </p>
           </div>
 

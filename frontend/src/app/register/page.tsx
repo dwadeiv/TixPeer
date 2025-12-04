@@ -152,7 +152,7 @@ export default function RegisterPage() {
             </div>
             <h1 className="text-2xl font-bold mb-2 text-green-900">Account Created!</h1>
             <p className="text-slate-600 mb-6">
-              We've sent a verification email to <strong>{registeredEmail}</strong>
+              We&apos;ve sent a verification email to <strong>{registeredEmail}</strong>
             </p>
 
             {/* Instructions */}
@@ -167,7 +167,7 @@ export default function RegisterPage() {
                 <li>Return to login and access your account</li>
               </ol>
               <p className="text-xs text-blue-700 mt-3">
-                💡 Don't see the email? Check your spam/junk folder
+                💡 Don&apos;t see the email? Check your spam/junk folder
               </p>
             </div>
 

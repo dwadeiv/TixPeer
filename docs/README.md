@@ -10,6 +10,7 @@ This directory contains all technical documentation for the TixPeer project.
 | [IMPLEMENTATION_PATTERNS.md](./IMPLEMENTATION_PATTERNS.md) | Code patterns, best practices, when/why to use specific approaches | All engineers |
 | [CACHING.md](./CACHING.md) | HTTP caching strategy, cache headers, future Redis plans | Backend engineers |
 | [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) | Deployment instructions, environment setup, production configuration | DevOps / Deployment |
+| [TESTING_STRATEGY.md](./TESTING_STRATEGY.md) | Comprehensive testing strategy, coverage goals, test types | All engineers |
 | [TESTING_GUIDE.md](./TESTING_GUIDE.md) | Testing approach, test structure, running tests | All engineers |
 | [DATABASE_SEEDING_STRATEGY.md](./DATABASE_SEEDING_STRATEGY.md) | Database seeding approach and strategy | Backend engineers |
 | [SEEDING_IMPLEMENTATION_SUMMARY.md](./SEEDING_IMPLEMENTATION_SUMMARY.md) | Seeding implementation details and summary | Backend engineers |
@@ -49,6 +50,13 @@ This directory contains all technical documentation for the TixPeer project.
 - Environment variables
 - Build and deployment process
 - Health checks and monitoring
+
+### TESTING_STRATEGY.md
+- Why 80% coverage target (not 100%)
+- Test types: unit, integration, WebSocket, frontend, e2e
+- Implementation phases and priorities
+- Test infrastructure and directory structure
+- Writing tests guidelines
 
 ### TESTING_GUIDE.md
 - Test structure and organization
