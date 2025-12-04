@@ -100,8 +100,10 @@ Domain-based Message Authentication, Reporting & Conformance (DMARC) tells recei
 **Environment Variable (`.env`):**
 ```
 FROM_EMAIL=tixpeer.service@tixpeer.com
-SENDGRID_API_KEY=<REDACTED-API-KEY>
+SENDGRID_API_KEY=<your-sendgrid-api-key>
 ```
+
+> **IMPORTANT:** Never commit API keys to version control. Store them only in `.env` which is in `.gitignore`.
 
 **Backend Email Service:**
 - Location: `backend/src/email/email.service.ts`
