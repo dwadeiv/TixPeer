@@ -409,7 +409,7 @@ export default function Home() {
               <>
                 <SearchIcon className="size-12 mx-auto mb-4 text-slate-400" />
                 <p className="text-slate-600 mb-2">
-                  No events found for "{searchQuery}"{location ? ` in ${location.name}` : ''}
+                  No events found for &quot;{searchQuery}&quot;{location ? ` in ${location.name}` : ''}
                 </p>
                 <p className="text-sm text-slate-500 mb-4">
                   Try searching for an artist name, sports team, or event type

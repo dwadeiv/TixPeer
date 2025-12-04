@@ -484,7 +484,7 @@ export default function Profile() {
         <TabsContent value="active" className="space-y-4">
           {activeListings.length === 0 ? (
             <Card className="p-12 text-center">
-              <p className="text-slate-600 mb-4">You don't have any active listings</p>
+              <p className="text-slate-600 mb-4">You don&apos;t have any active listings</p>
               <Link href="/create">
                 <Button>Create Your First Listing</Button>
               </Link>
@@ -533,7 +533,7 @@ export default function Profile() {
 
         <TabsContent value="saved" className="space-y-4">
           <Card className="p-12 text-center">
-            <p className="text-slate-600">Save listings you're interested in to view them later</p>
+            <p className="text-slate-600">Save listings you&apos;re interested in to view them later</p>
           </Card>
         </TabsContent>
       </Tabs>
@@ -759,7 +759,7 @@ export default function Profile() {
             {/* Favorite Event Categories */}
             <div className="space-y-3">
               <Label>Favorite Event Categories</Label>
-              <p className="text-sm text-slate-500">Select the types of events you're interested in</p>
+              <p className="text-sm text-slate-500">Select the types of events you&apos;re interested in</p>
               <div className="grid grid-cols-2 gap-3">
                 {['Music', 'Sports', 'Theater', 'Comedy', 'Festival', 'Other'].map((category) => (
                   <div key={category} className="flex items-center space-x-2">
