@@ -211,8 +211,8 @@ export default function Messages() {
   /**
    * Check if other user is online
    */
-  const isUserOnline = (conversation: Conversation) => {
-    if (!user) return false;
+  const isUserOnline = (conversation: Conversation | null) => {
+    if (!user || !conversation) return false;
     const otherUserId = conversation.user1Id === user.id
       ? conversation.user2Id
       : conversation.user1Id;
@@ -222,8 +222,8 @@ export default function Messages() {
   /**
    * Get the other user in the conversation
    */
-  const getOtherUser = (conversation: Conversation) => {
-    if (!user) return null;
+  const getOtherUser = (conversation: Conversation | null) => {
+    if (!user || !conversation) return null;
     return conversation.user1Id === user.id ? conversation.user2 : conversation.user1;
   };
 

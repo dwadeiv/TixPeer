@@ -23,14 +23,14 @@ function TestComponent() {
       </div>
       <button
         onClick={() =>
-          setLocation({ name: 'Austin', state: 'TX', coordinates: [30.27, -97.74] })
+          setLocation({ name: 'Austin', state: 'TX', label: 'Austin, TX', lat: 30.27, lng: -97.74 })
         }
       >
         Set Austin
       </button>
       <button
         onClick={() =>
-          setLocation({ name: 'New York', state: 'NY', coordinates: [40.71, -74.01] })
+          setLocation({ name: 'New York', state: 'NY', label: 'New York, NY', lat: 40.71, lng: -74.01 })
         }
       >
         Set New York
@@ -65,7 +65,7 @@ describe('LocationContext', () => {
     });
 
     it('should load location from localStorage on mount', async () => {
-      const savedLocation = { name: 'Austin', state: 'TX', coordinates: [30.27, -97.74] };
+      const savedLocation = { name: 'Austin', state: 'TX', label: 'Austin, TX', lat: 30.27, lng: -97.74 };
       (window.localStorage.getItem as jest.Mock).mockReturnValue(JSON.stringify(savedLocation));
 
       renderWithProvider();
