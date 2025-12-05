@@ -1,6 +1,6 @@
 # TixPeer Architecture
 
-**Last Updated:** November 25, 2025
+**Last Updated:** December 4, 2025
 
 ## Table of Contents
 - [Overview](#overview)
@@ -259,11 +259,18 @@ events
 ├── venue (varchar)
 ├── location (varchar)
 ├── city (varchar)
+├── lat (decimal(10,7), nullable)    -- Latitude for geo-search
+├── lng (decimal(10,7), nullable)    -- Longitude for geo-search
 ├── category (enum: concert, sports, theater, comedy, festival, other)
 ├── imageUrl (varchar, nullable)
 ├── createdAt (timestamp)
 └── updatedAt (timestamp)
 ```
+
+**Geo-Search Notes:**
+- Coordinates stored as decimal(10,7) for precision to ~1cm
+- Haversine formula used for distance calculations (no PostGIS dependency)
+- Events without coordinates excluded from geo-search results
 
 ### Listings Table
 ```sql
@@ -404,7 +411,15 @@ Conversation 1──────── * Messages
 │   └── POST   /profile/avatar      (Upload avatar - JWT required)
 │
 ├── /events
-│   ├── GET    /                    (Get all events, filter by city/category)
+│   ├── GET    /                    (Get events with optional geo-search)
+│   │   Query params:
+│   │   ├── q        (string) - Search event name
+│   │   ├── lat      (number) - Latitude for geo-search
+│   │   ├── lng      (number) - Longitude for geo-search
+│   │   ├── radius   (number) - Search radius in miles (default: 100)
+│   │   ├── city     (string) - Filter by city name (legacy)
+│   │   └── category (string) - Filter by event category
+│   │   Response: { events: Event[], searchedNearby: boolean, locationName?: string }
 │   └── GET    /:id                 (Get event details + active listings count)
 │
 ├── /listings

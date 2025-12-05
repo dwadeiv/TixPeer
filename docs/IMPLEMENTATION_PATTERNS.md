@@ -1,6 +1,6 @@
 # TixPeer Implementation Patterns
 
-**Last Updated:** November 26, 2025
+**Last Updated:** December 4, 2025
 
 This document describes the implementation patterns used throughout TixPeer. It serves as a guide for future engineers to understand not just *what* the code does, but *why* certain implementation choices were made.
 
@@ -30,6 +30,7 @@ This document describes the implementation patterns used throughout TixPeer. It 
   - [Query Builder Pattern](#query-builder-pattern)
   - [Eager Loading Pattern](#eager-loading-pattern)
   - [Denormalization Pattern](#denormalization-pattern)
+  - [Haversine Geo-Search Pattern](#haversine-geo-search-pattern)
 - [Authentication Patterns](#authentication-patterns)
   - [JWT Flow](#jwt-flow)
   - [Token Storage](#token-storage)
@@ -1070,6 +1071,138 @@ export class Listing {
 
 ---
 
+### Haversine Geo-Search Pattern
+
+**Location:** `backend/src/events/events.service.ts`
+
+Location-based search using the Haversine formula to calculate distances between coordinates without requiring PostGIS.
+
+**Why Haversine Instead of PostGIS:**
+- No additional database extensions required
+- Works with standard PostgreSQL decimal columns
+- Simpler deployment (no PostGIS setup)
+- Sufficient accuracy for event search (within ~0.5% error)
+- Easy to understand and maintain
+
+**Database Schema:**
+```typescript
+// In Event entity
+@Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
+lat: number;
+
+@Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
+lng: number;
+```
+
+**Haversine Formula Implementation:**
+```typescript
+/**
+ * Calculate distance between two coordinates using Haversine formula
+ * @returns Distance in miles
+ */
+private calculateDistance(
+  lat1: number, lng1: number,
+  lat2: number, lng2: number
+): number {
+  const R = 3959; // Earth's radius in miles (use 6371 for km)
+  const dLat = this.toRadians(lat2 - lat1);
+  const dLng = this.toRadians(lng2 - lng1);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(this.toRadians(lat1)) * Math.cos(this.toRadians(lat2)) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+private toRadians(degrees: number): number {
+  return degrees * (Math.PI / 180);
+}
+```
+
+**Geo-Search Query Pattern:**
+```typescript
+async findAll(params: {
+  lat?: number;
+  lng?: number;
+  radius?: number;  // Default: 100 miles
+}): Promise<{ events: Event[]; searchedNearby: boolean; locationName?: string }> {
+  const queryBuilder = this.eventRepository.createQueryBuilder('event');
+
+  // Only apply geo-filter if coordinates provided
+  if (params.lat !== undefined && params.lng !== undefined) {
+    // First, get all events with coordinates
+    const eventsWithCoords = await queryBuilder
+      .where('event.lat IS NOT NULL')
+      .andWhere('event.lng IS NOT NULL')
+      .getMany();
+
+    // Filter by distance in JavaScript (Haversine)
+    const radius = params.radius || 100;
+    const nearbyEvents = eventsWithCoords.filter(event => {
+      const distance = this.calculateDistance(
+        params.lat!, params.lng!,
+        Number(event.lat), Number(event.lng)
+      );
+      return distance <= radius;
+    });
+
+    // Find nearest city for display
+    const nearestCity = this.findNearestCity(params.lat, params.lng);
+
+    return {
+      events: nearbyEvents,
+      searchedNearby: true,
+      locationName: nearestCity
+    };
+  }
+
+  // No geo-filter, return all events
+  const events = await queryBuilder.orderBy('event.date', 'ASC').getMany();
+  return { events, searchedNearby: false };
+}
+```
+
+**Frontend Integration (LocationContext):**
+```typescript
+// Get user's location via browser API
+navigator.geolocation.getCurrentPosition(
+  (position) => {
+    setLocation({
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+      name: 'Current Location'
+    });
+  },
+  (error) => {
+    // Fallback to default or prompt user
+  }
+);
+
+// Pass to API
+const { events, searchedNearby, locationName } = await api.getEvents({
+  lat: location.lat,
+  lng: location.lng,
+  radius: 100
+});
+```
+
+**Performance Considerations:**
+- For large datasets (10K+ events), consider:
+  - Pre-filtering with bounding box before Haversine calculation
+  - Caching frequently searched locations
+  - Adding database indexes on lat/lng columns
+- Current implementation handles ~1000 events efficiently
+
+**When to Upgrade to PostGIS:**
+- Dataset exceeds 50K events with geo-coordinates
+- Need complex geo queries (polygons, routes, overlaps)
+- Require precise distance calculations (surveying, logistics)
+
+---
+
 ## Authentication Patterns
 
 ### JWT Flow
@@ -1369,6 +1502,7 @@ if (honeypotValue) {
 | Complex database queries | Query Builder |
 | Avoiding N+1 queries | Eager Loading |
 | Reducing JOINs on list pages | Denormalization |
+| Location-based filtering | Haversine Geo-Search |
 | Real-time features | WebSocket Gateway |
 | Error responses | NestJS Exceptions |
 | Production logging | NestJS Logger |
