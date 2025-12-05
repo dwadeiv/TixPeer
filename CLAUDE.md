@@ -30,8 +30,13 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
        - WebSocket patterns (connection management, reconnection, events)
        - Database patterns (repositories, query builders, eager loading)
        - Security and authentication patterns
+     - **docs/TESTING_STRATEGY.md** - Understand testing requirements:
+       - Test types (unit, integration, E2E) and when to use each
+       - Coverage targets per module (80% overall target)
+       - Test patterns and conventions (AAA, factories, mocking)
+       - Test file organization and naming conventions
    - Reading these documents ensures faster onboarding, consistent code patterns, and prevents reinventing solutions
-   - After reading both documents, be prepared to answer questions and make informed decisions based on the documented architecture and patterns
+   - After reading these documents, be prepared to answer questions and make informed decisions based on the documented architecture, patterns, and testing requirements
    - Additional documentation is available in the docs/ directory (see docs/README.md for index)
 
 ---
@@ -88,11 +93,23 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
    - Ensure proper data flow: Database ↔ Backend API ↔ Frontend
    - Update API client methods in `frontend/src/lib/api.ts` for all new endpoints
 
+9. **Test Maintenance Required**
+   - When implementing new features or modifying existing functionality, write corresponding tests
+   - Follow test types defined in TESTING_STRATEGY.md:
+     - Unit tests for business logic (services, utilities)
+     - Integration tests for API endpoints (controllers)
+     - E2E tests for critical user flows
+   - Maintain coverage targets: 80% overall, module-specific targets in TESTING_STRATEGY.md
+   - Update existing tests when modifying code they cover
+   - Run tests before considering a feature complete to ensure nothing is broken
+   - Use test factories in `backend/test/factories/` for consistent test data generation
+   - This ensures code quality and prevents regressions across the codebase
+
 ---
 
 ### Priority 4: Code Quality
 
-9. **Code Must Be Well-Commented**
+10. **Code Must Be Well-Commented**
    - Add clear comments explaining:
      - WHY code exists (business logic and reasoning)
      - WHAT complex operations do (step-by-step for non-obvious code)
@@ -116,7 +133,7 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
      }
      ```
 
-10. **Maintain Comments as Code Evolves**
+11. **Maintain Comments as Code Evolves**
    - When modifying code, ALWAYS update or remove related comments
    - Delete comments that no longer apply to the current implementation
    - Add new comments when introducing new logic or complexity
@@ -135,7 +152,7 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
 
 ### Priority 5: Documentation & Tracking
 
-11. **Architecture Documentation Maintenance**
+12. **Architecture Documentation Maintenance**
     - When making architectural changes, update docs/ARCHITECTURE.md to reflect the changes
     - Architectural changes include:
       - New modules, services, or controllers
@@ -149,7 +166,7 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
     - Maintain consistency between code implementation and documentation
     - This ensures the architecture document stays accurate and useful for understanding the system
 
-12. **Implementation Patterns Documentation Maintenance**
+13. **Implementation Patterns Documentation Maintenance**
     - When introducing new code patterns or best practices, update docs/IMPLEMENTATION_PATTERNS.md
     - Pattern changes that warrant documentation include:
       - New state management approaches (React Context, custom hooks, etc.)
@@ -164,7 +181,7 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
     - Keep the "Last Updated" date current at the top of docs/IMPLEMENTATION_PATTERNS.md
     - This ensures new engineers can understand and replicate established patterns
 
-13. **Create Proper Notes for Tracking**
+14. **Create Proper Notes for Tracking**
     - When the user says "make a note", ALWAYS create a proper tracking note in an appropriate file
    - Use or create a TODO.md file in the relevant directory (frontend/TODO.md, backend/TODO.md, or root TODO.md)
    - Notes should include:
@@ -175,7 +192,7 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
      - Priority level (High/Medium/Low)
    - This ensures important issues and future work are documented and not forgotten across sessions
 
-14. **Auto-generate Commit Messages**
+15. **Auto-generate Commit Messages**
    - After generating new code or files, automatically generate a commit message
    - Simply print the commit message for the user to copy and commit
    - Follow the existing commit message format with:
