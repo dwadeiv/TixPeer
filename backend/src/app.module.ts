@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TicketsModule } from './tickets/tickets.module';
@@ -16,6 +17,13 @@ import { MessagesModule } from './messages/messages.module';
       isGlobal: true,
       envFilePath: '../.env',
     }),
+    // Rate limiting: 100 requests per 60 seconds per IP
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 60 seconds in milliseconds
+        limit: 100,
+      },
+    ]),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DATABASE_HOST || 'localhost',

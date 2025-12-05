@@ -1487,6 +1487,98 @@ if (honeypotValue) {
 }
 ```
 
+### Rate Limiting (ThrottlerModule)
+
+**Location:** `backend/src/app.module.ts`
+
+Protect against brute-force attacks and API abuse with IP-based rate limiting.
+
+```typescript
+// app.module.ts
+import { ThrottlerModule } from '@nestjs/throttler';
+
+@Module({
+  imports: [
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 60 seconds in milliseconds
+        limit: 100, // 100 requests per TTL window
+      },
+    ]),
+    // ... other modules
+  ],
+})
+export class AppModule {}
+```
+
+**When to Apply:**
+- Always enabled globally via module configuration
+- Can skip specific routes with `@SkipThrottle()` decorator
+- Can customize limits per route with `@Throttle({ default: { ttl: 60000, limit: 10 } })`
+
+### Request Logging Interceptor
+
+**Location:** `backend/src/common/interceptors/logging.interceptor.ts`
+
+Log request method, URL, and response time for performance monitoring.
+
+```typescript
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
+
+@Injectable()
+export class LoggingInterceptor implements NestInterceptor {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const now = Date.now();
+    const ctx = context.switchToHttp();
+    const req = ctx.getRequest();
+
+    return next.handle().pipe(
+      tap(() => {
+        const ms = Date.now() - now;
+        console.log(`[${req?.method}] ${req?.url} - ${ms}ms`);
+      }),
+    );
+  }
+}
+
+// Applied globally in main.ts
+app.useGlobalInterceptors(new LoggingInterceptor());
+```
+
+**Output Example:**
+```
+[GET] /events - 45ms
+[POST] /auth/login - 128ms
+[GET] /users/profile - 23ms
+```
+
+### Helmet Security Headers
+
+**Location:** `backend/src/main.ts`
+
+Add standard HTTP security headers to all responses.
+
+```typescript
+import helmet from 'helmet';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  // Security headers (X-Frame-Options, X-Content-Type-Options, etc.)
+  app.use(helmet());
+
+  // ... rest of bootstrap
+}
+```
+
+**Headers Added:**
+- `X-Frame-Options: SAMEORIGIN` - Prevents clickjacking
+- `X-Content-Type-Options: nosniff` - Prevents MIME type sniffing
+- `X-DNS-Prefetch-Control: off` - Disables DNS prefetching
+- `Strict-Transport-Security` - Enforces HTTPS (when in production)
+
 ---
 
 ## Quick Reference
@@ -1506,6 +1598,9 @@ if (honeypotValue) {
 | Real-time features | WebSocket Gateway |
 | Error responses | NestJS Exceptions |
 | Production logging | NestJS Logger |
+| Abuse prevention | Rate Limiting (ThrottlerModule) |
+| Request timing visibility | Logging Interceptor |
+| HTTP security headers | Helmet middleware |
 
 ### File Location Cheat Sheet
 
@@ -1517,6 +1612,7 @@ if (honeypotValue) {
 | DTOs | `backend/src/{feature}/dto/` |
 | Entities | `backend/src/{feature}/entities/` |
 | Guards | `backend/src/auth/guards/` |
+| Interceptors | `backend/src/common/interceptors/` |
 | WebSocket Gateway | `backend/src/messages/messages.gateway.ts` |
 
 ---
