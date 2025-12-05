@@ -4,7 +4,7 @@
 # It ensures all tests pass before code can be merged.
 #
 # Test Suites:
-# - Backend unit tests (105 tests)
+# - Backend unit tests (120 tests)
 # - Backend integration tests (98 tests)
 # - Backend WebSocket tests (20 tests)
 # - Frontend unit tests (21 tests)

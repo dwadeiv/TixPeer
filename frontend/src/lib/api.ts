@@ -197,10 +197,28 @@ class ApiClient {
   // ========== Events Endpoints ==========
 
   /**
-   * Get all events, optionally filtered by city or category
-   * Used for homepage "Trending Events" and location-based filtering
+   * Search events with optional location-based filtering
+   *
+   * @param params.q - Search query for event name
+   * @param params.lat - Latitude for location-based search
+   * @param params.lng - Longitude for location-based search
+   * @param params.radius - Search radius in miles (default: 100)
+   * @param params.city - Filter by city name (legacy)
+   * @param params.category - Filter by category
+   *
+   * @returns Object with events array and metadata:
+   *   - events: Array of events matching criteria
+   *   - searchedNearby: Whether location search was used
+   *   - locationName: Name of nearest city (when using geo search)
    */
-  async getEvents(params?: { city?: string; category?: string }) {
+  async getEvents(params?: {
+    q?: string;
+    lat?: number;
+    lng?: number;
+    radius?: number;
+    city?: string;
+    category?: string;
+  }): Promise<{ events: any[]; searchedNearby: boolean; locationName?: string }> {
     const response = await this.client.get('/events', { params });
     return response.data;
   }

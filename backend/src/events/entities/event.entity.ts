@@ -51,6 +51,20 @@ export class Event {
   @Column()
   city: string;
 
+  /**
+   * Latitude coordinate for geo-based search
+   * Used with lng for proximity/radius filtering
+   */
+  @Column('decimal', { precision: 10, scale: 6, nullable: true })
+  lat: number;
+
+  /**
+   * Longitude coordinate for geo-based search
+   * Used with lat for proximity/radius filtering
+   */
+  @Column('decimal', { precision: 10, scale: 6, nullable: true })
+  lng: number;
+
   /** URL to event banner/poster image for display cards */
   @Column()
   image: string;

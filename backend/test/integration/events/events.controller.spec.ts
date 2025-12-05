@@ -80,14 +80,16 @@ describe('EventsController (Integration)', () => {
   });
 
   describe('GET /events', () => {
-    it('should return all events', async () => {
+    it('should return all events wrapped in response object', async () => {
       mockEventsService.findAll.mockResolvedValue(mockEvents);
 
       const response = await request(app.getHttpServer())
         .get('/events')
         .expect(200);
 
-      expect(response.body).toEqual(mockEvents);
+      // Response format changed to { events: [...], searchedNearby: boolean }
+      expect(response.body.events).toEqual(mockEvents);
+      expect(response.body.searchedNearby).toBe(false);
       expect(mockEventsService.findAll).toHaveBeenCalled();
     });
 
@@ -100,7 +102,8 @@ describe('EventsController (Integration)', () => {
         .query({ city: 'Austin' })
         .expect(200);
 
-      expect(response.body).toEqual(austinEvents);
+      expect(response.body.events).toEqual(austinEvents);
+      expect(response.body.searchedNearby).toBe(false);
       expect(mockEventsService.findByCity).toHaveBeenCalledWith('Austin');
       expect(mockEventsService.findAll).not.toHaveBeenCalled();
     });
@@ -114,7 +117,8 @@ describe('EventsController (Integration)', () => {
         .query({ category: 'Music' })
         .expect(200);
 
-      expect(response.body).toEqual(musicEvents);
+      expect(response.body.events).toEqual(musicEvents);
+      expect(response.body.searchedNearby).toBe(false);
       expect(mockEventsService.findByCategory).toHaveBeenCalledWith('Music');
       expect(mockEventsService.findAll).not.toHaveBeenCalled();
     });
@@ -131,14 +135,15 @@ describe('EventsController (Integration)', () => {
       expect(mockEventsService.findByCategory).not.toHaveBeenCalled();
     });
 
-    it('should return empty array when no events', async () => {
+    it('should return empty events array when no events', async () => {
       mockEventsService.findAll.mockResolvedValue([]);
 
       const response = await request(app.getHttpServer())
         .get('/events')
         .expect(200);
 
-      expect(response.body).toEqual([]);
+      expect(response.body.events).toEqual([]);
+      expect(response.body.searchedNearby).toBe(false);
     });
 
     it('should include Cache-Control header', async () => {

@@ -17,6 +17,8 @@ interface EventFactoryOptions {
   date?: Date;
   imageUrl?: string;
   category?: string;
+  lat?: number;
+  lng?: number;
 }
 
 let eventCounter = 0;
@@ -42,6 +44,8 @@ export function generateEventData(options: EventFactoryOptions = {}): Partial<Ev
     date: options.date ?? futureDate,
     imageUrl: options.imageUrl ?? null,
     category: options.category ?? 'concert',
+    lat: options.lat ?? null,
+    lng: options.lng ?? null,
   };
 }
 
@@ -131,4 +135,39 @@ export async function createEventsOfCategories(
  */
 export function resetEventCounter(): void {
   eventCounter = 0;
+}
+
+/**
+ * Known city coordinates for geo-search testing
+ * Distances are pre-calculated for test assertions
+ */
+export const TEST_LOCATIONS = {
+  // New York City
+  NYC: { lat: 40.7128, lng: -74.006, city: 'New York', state: 'NY' },
+  // Los Angeles (~2,451 miles from NYC)
+  LA: { lat: 34.0522, lng: -118.2437, city: 'Los Angeles', state: 'CA' },
+  // Chicago (~713 miles from NYC)
+  CHICAGO: { lat: 41.8781, lng: -87.6298, city: 'Chicago', state: 'IL' },
+  // Boston (~190 miles from NYC)
+  BOSTON: { lat: 42.3601, lng: -71.0589, city: 'Boston', state: 'MA' },
+  // Philadelphia (~80 miles from NYC)
+  PHILLY: { lat: 39.9526, lng: -75.1652, city: 'Philadelphia', state: 'PA' },
+};
+
+/**
+ * Creates an event at a specific known location
+ */
+export async function createEventAtLocation(
+  dataSource: DataSource,
+  location: keyof typeof TEST_LOCATIONS,
+  options: EventFactoryOptions = {},
+): Promise<Event> {
+  const loc = TEST_LOCATIONS[location];
+  return createEvent(dataSource, {
+    ...options,
+    city: options.city ?? loc.city,
+    state: options.state ?? loc.state,
+    lat: options.lat ?? loc.lat,
+    lng: options.lng ?? loc.lng,
+  });
 }

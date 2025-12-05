@@ -52,8 +52,8 @@ export default function Header() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const eventsData = await api.getEvents();
-        setEvents(eventsData);
+        const response = await api.getEvents();
+        setEvents(response.events);
       } catch (error) {
         console.error('Error fetching events for search:', error);
       }

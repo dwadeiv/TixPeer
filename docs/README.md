@@ -8,14 +8,11 @@ This directory contains all technical documentation for the TixPeer project.
 |----------|-------------|----------|
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | System architecture, tech stack, data flows, database schema, API structure | All engineers |
 | [IMPLEMENTATION_PATTERNS.md](./IMPLEMENTATION_PATTERNS.md) | Code patterns, best practices, when/why to use specific approaches | All engineers |
+| [TESTING_STRATEGY.md](./TESTING_STRATEGY.md) | Comprehensive testing strategy, coverage goals, test types | All engineers |
 | [CACHING.md](./CACHING.md) | HTTP caching strategy, cache headers, future Redis plans | Backend engineers |
 | [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) | Deployment instructions, environment setup, production configuration | DevOps / Deployment |
-| [TESTING_STRATEGY.md](./TESTING_STRATEGY.md) | Comprehensive testing strategy, coverage goals, test types | All engineers |
-| [TESTING_GUIDE.md](./TESTING_GUIDE.md) | Testing approach, test structure, running tests | All engineers |
-| [DATABASE_SEEDING_STRATEGY.md](./DATABASE_SEEDING_STRATEGY.md) | Database seeding approach and strategy | Backend engineers |
-| [SEEDING_IMPLEMENTATION_SUMMARY.md](./SEEDING_IMPLEMENTATION_SUMMARY.md) | Seeding implementation details and summary | Backend engineers |
-| [EMAIL_SETUP.md](./EMAIL_SETUP.md) | Email service configuration (SendGrid) | DevOps / Email setup |
-| [SENDGRID_DOMAIN_AUTHENTICATION.md](./SENDGRID_DOMAIN_AUTHENTICATION.md) | SendGrid domain authentication setup | DevOps / Email setup |
+| [EMAIL_SETUP.md](./EMAIL_SETUP.md) | Email service configuration, SendGrid setup, domain authentication | DevOps / Email setup |
+| [MANUAL_API_TESTING.md](./MANUAL_API_TESTING.md) | Manual API testing with Swagger and cURL | QA / New engineers |
 
 ## Quick Start for New Engineers
 
@@ -58,11 +55,17 @@ This directory contains all technical documentation for the TixPeer project.
 - Test infrastructure and directory structure
 - Writing tests guidelines
 
-### TESTING_GUIDE.md
-- Test structure and organization
-- Running unit and e2e tests
-- Mocking strategies
-- Test coverage goals
+### EMAIL_SETUP.md
+- SendGrid account and API key setup
+- Domain authentication (SPF, DKIM)
+- Email templates (verification, welcome)
+- Troubleshooting email delivery
+
+### MANUAL_API_TESTING.md
+- Testing with Swagger UI
+- cURL command examples
+- Manual verification checklist
+- Multi-user testing scenarios
 
 ## Keeping Documentation Updated
 
