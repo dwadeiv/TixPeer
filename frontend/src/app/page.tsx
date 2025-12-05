@@ -44,6 +44,10 @@ export default function Home() {
   const [customDateRange, setCustomDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
   const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
 
+  // Location-aware search state
+  const [searchedNearby, setSearchedNearby] = useState(false);
+  const [searchEverywhere, setSearchEverywhere] = useState(false);
+
   // Location from global context - allows users to filter events by city
   const { location } = useLocation();
 
@@ -52,10 +56,14 @@ export default function Home() {
   const searchQuery = searchParams.get('search') || '';
 
   /**
-   * Fetch all events and listings on mount
+   * Fetch events and listings with location-aware search
    * Uses Promise.all to make parallel API requests for faster loading
    * Includes automatic retry with exponential backoff for resilience
-   * This is critical for good UX - users see all data at once
+   *
+   * Search behavior:
+   * - If location is set and not searching everywhere: Search within 100 miles
+   * - If searching everywhere or no location: Return all events
+   * - Search query is passed to API for server-side filtering
    */
   useEffect(() => {
     const fetchData = async (retryCount = 0) => {
@@ -63,13 +71,34 @@ export default function Home() {
         setLoading(true);
         setError(null);
 
+        // Build search params based on location and search query
+        const searchParams: {
+          q?: string;
+          lat?: number;
+          lng?: number;
+          radius?: number;
+        } = {};
+
+        // Add search query if present
+        if (searchQuery) {
+          searchParams.q = searchQuery;
+        }
+
+        // Add location for geo-search (only if not searching everywhere)
+        if (location && !searchEverywhere) {
+          searchParams.lat = location.lat;
+          searchParams.lng = location.lng;
+          searchParams.radius = 100; // 100 mile radius
+        }
+
         // Parallel fetching - much faster than sequential API calls
-        const [eventsData, listingsData] = await Promise.all([
-          api.getEvents(),
+        const [eventsResponse, listingsData] = await Promise.all([
+          api.getEvents(searchParams),
           api.getListings()
         ]);
 
-        setEvents(eventsData);
+        setEvents(eventsResponse.events);
+        setSearchedNearby(eventsResponse.searchedNearby);
         setListings(listingsData);
         setLoading(false); // Clear loading on success
       } catch (error: any) {
@@ -90,7 +119,15 @@ export default function Home() {
     };
 
     fetchData();
-  }, []);
+  }, [location, searchQuery, searchEverywhere]);
+
+  /**
+   * Reset searchEverywhere when location changes
+   * This ensures users get location-specific results when they change their location
+   */
+  useEffect(() => {
+    setSearchEverywhere(false);
+  }, [location]);
 
   /**
    * Helper function to get date range based on selected filter
@@ -125,14 +162,13 @@ export default function Home() {
 
   /**
    * Event Filtering Logic
-   * Applied in FOUR stages for better UX:
-   * 1. Past events filter - hide events that have already occurred (unless specifically searching for them)
-   * 2. Search filter - narrows down by keyword (name/venue/category)
-   * 3. Location filter - further narrows by city
-   * 4. Date filter - filters by date range
+   * Server-side filtering handles:
+   * - Location-based search (within radius when location is set)
+   * - Text search by event name
    *
-   * This order matters: searching "Taylor Swift" in "Los Angeles" should
-   * show all Taylor Swift events in LA, not LA events matching "Taylor Swift"
+   * Client-side filtering handles:
+   * - Past events filter (hide by default unless searching)
+   * - Date range filter (today, week, month, custom)
    *
    * TODO: Future Enhancement - Personalized Recommendation Algorithm
    * Currently sorted by popularity (activeListings count) as a proxy for demand.
@@ -157,21 +193,7 @@ export default function Home() {
     filteredEvents = filteredEvents.filter(event => new Date(event.date) >= today);
   }
 
-  // Stage 2: Filter by search query (case-insensitive match on name, venue, or category)
-  if (searchQuery) {
-    filteredEvents = filteredEvents.filter(event =>
-      event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.venue.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.category.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }
-
-  // Stage 3: Filter by location (applies to both search results and general browsing)
-  if (location) {
-    filteredEvents = filteredEvents.filter(event => event.city === location.name);
-  }
-
-  // Stage 4: Filter by date range
+  // Stage 2: Filter by date range (client-side since it's UI-specific)
   const dateRange = getDateRange();
   if (dateRange.start || dateRange.end) {
     filteredEvents = filteredEvents.filter(event => {
@@ -383,18 +405,49 @@ export default function Home() {
 
       {/* Trending Events Section */}
       <section>
-        {/* Dynamic Header - changes based on active filters */}
+        {/* Dynamic Header - changes based on active filters and search scope */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl">
-            {/* Show most specific filter first: search + location > search > location > default */}
-            {searchQuery && location
-              ? `Search Results for "${searchQuery}" in ${location.name}`
-              : searchQuery
-              ? `Search Results for "${searchQuery}"`
-              : location
-              ? `Events in ${location.name}`
-              : 'Trending Events'}
-          </h2>
+          <div>
+            <h2 className="text-2xl">
+              {/* Show most specific filter first: search + location > search > location > default */}
+              {searchQuery && searchedNearby && !searchEverywhere
+                ? `Results for "${searchQuery}" near ${location?.name}`
+                : searchQuery && searchEverywhere
+                ? `Results for "${searchQuery}" (All Locations)`
+                : searchQuery
+                ? `Search Results for "${searchQuery}"`
+                : searchedNearby && !searchEverywhere
+                ? `Events near ${location?.name}`
+                : searchEverywhere
+                ? 'Events (All Locations)'
+                : location
+                ? `Events in ${location.name}`
+                : 'Trending Events'}
+            </h2>
+            {/* Show result count and "Search All" option when using location search */}
+            {searchedNearby && !searchEverywhere && locationFilteredEvents.length > 0 && (
+              <p className="text-sm text-slate-500 mt-1">
+                Found {locationFilteredEvents.length} events within 100 miles •{' '}
+                <button
+                  onClick={() => setSearchEverywhere(true)}
+                  className="text-purple-600 hover:underline"
+                >
+                  Search all locations
+                </button>
+              </p>
+            )}
+            {searchEverywhere && (
+              <p className="text-sm text-slate-500 mt-1">
+                Showing events from all locations •{' '}
+                <button
+                  onClick={() => setSearchEverywhere(false)}
+                  className="text-purple-600 hover:underline"
+                >
+                  Search near {location?.name}
+                </button>
+              </p>
+            )}
+          </div>
           {searchQuery && (
             <Link href="/">
               <Button variant="ghost" size="sm">Clear Search</Button>
@@ -409,22 +462,47 @@ export default function Home() {
               <>
                 <SearchIcon className="size-12 mx-auto mb-4 text-slate-400" />
                 <p className="text-slate-600 mb-2">
-                  No events found for &quot;{searchQuery}&quot;{location ? ` in ${location.name}` : ''}
+                  No events found for &quot;{searchQuery}&quot;{searchedNearby && location ? ` near ${location.name}` : ''}
                 </p>
                 <p className="text-sm text-slate-500 mb-4">
                   Try searching for an artist name, sports team, or event type
-                  {location && ' or change your location'}
                 </p>
+                {/* Search all locations button - allows users to expand search beyond their area */}
+                {searchedNearby && !searchEverywhere && (
+                  <Button
+                    onClick={() => setSearchEverywhere(true)}
+                    className="mb-3"
+                  >
+                    Search All Locations
+                  </Button>
+                )}
                 <Link href="/">
-                  <Button>View All Events</Button>
+                  <Button variant={searchedNearby && !searchEverywhere ? "outline" : "default"}>
+                    Clear Search
+                  </Button>
                 </Link>
+              </>
+            ) : location ? (
+              <>
+                <MapPin className="size-12 mx-auto mb-4 text-slate-400" />
+                <p className="text-slate-600 mb-2">
+                  No events found {searchedNearby ? `within 100 miles of ${location.name}` : `in ${location.name}`}
+                </p>
+                <p className="text-sm text-slate-500 mb-4">
+                  Try searching all locations to find events nationwide
+                </p>
+                {!searchEverywhere && (
+                  <Button onClick={() => setSearchEverywhere(true)}>
+                    Search All Locations
+                  </Button>
+                )}
               </>
             ) : (
               <>
                 <MapPin className="size-12 mx-auto mb-4 text-slate-400" />
-                <p className="text-slate-600 mb-2">No events found in {location?.name}</p>
+                <p className="text-slate-600 mb-2">No events found</p>
                 <p className="text-sm text-slate-500 mb-4">
-                  Try selecting a different city or check back later for new events
+                  Check back later for new events
                 </p>
               </>
             )}

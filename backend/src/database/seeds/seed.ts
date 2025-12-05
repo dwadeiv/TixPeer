@@ -23,6 +23,8 @@ import * as bcrypt from 'bcrypt';
 import { User } from '../../users/entities/user.entity';
 import { Event } from '../../events/entities/event.entity';
 import { Listing } from '../../listings/entities/listing.entity';
+import { Message } from '../../messages/entities/message.entity';
+import { Conversation } from '../../messages/entities/conversation.entity';
 
 /**
  * Helper Data Arrays
@@ -34,34 +36,41 @@ const firstNames = ['James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', '
 const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson', 'White', 'Harris', 'Sanchez', 'Clark', 'Ramirez', 'Lewis', 'Robinson', 'Walker', 'Young', 'Allen', 'King', 'Wright', 'Scott', 'Torres', 'Nguyen', 'Hill', 'Flores', 'Green', 'Adams', 'Nelson', 'Baker', 'Hall', 'Rivera', 'Campbell', 'Mitchell', 'Carter', 'Roberts'];
 
 // Major US cities where events are hosted - matches event locations for realistic filtering
+// Includes lat/lng coordinates for geo-based search functionality
 const cities = [
-  { name: 'New York', state: 'NY' },
-  { name: 'Los Angeles', state: 'CA' },
-  { name: 'Chicago', state: 'IL' },
-  { name: 'Houston', state: 'TX' },
-  { name: 'Phoenix', state: 'AZ' },
-  { name: 'Philadelphia', state: 'PA' },
-  { name: 'San Antonio', state: 'TX' },
-  { name: 'San Diego', state: 'CA' },
-  { name: 'Dallas', state: 'TX' },
-  { name: 'San Jose', state: 'CA' },
-  { name: 'Austin', state: 'TX' },
-  { name: 'Jacksonville', state: 'FL' },
-  { name: 'Fort Worth', state: 'TX' },
-  { name: 'Columbus', state: 'OH' },
-  { name: 'Charlotte', state: 'NC' },
-  { name: 'San Francisco', state: 'CA' },
-  { name: 'Indianapolis', state: 'IN' },
-  { name: 'Seattle', state: 'WA' },
-  { name: 'Denver', state: 'CO' },
-  { name: 'Boston', state: 'MA' },
-  { name: 'Nashville', state: 'TN' },
-  { name: 'Detroit', state: 'MI' },
-  { name: 'Portland', state: 'OR' },
-  { name: 'Las Vegas', state: 'NV' },
-  { name: 'Miami', state: 'FL' },
-  { name: 'Atlanta', state: 'GA' },
+  { name: 'New York', state: 'NY', lat: 40.7128, lng: -74.0060 },
+  { name: 'Los Angeles', state: 'CA', lat: 34.0522, lng: -118.2437 },
+  { name: 'Chicago', state: 'IL', lat: 41.8781, lng: -87.6298 },
+  { name: 'Houston', state: 'TX', lat: 29.7604, lng: -95.3698 },
+  { name: 'Phoenix', state: 'AZ', lat: 33.4484, lng: -112.0740 },
+  { name: 'Philadelphia', state: 'PA', lat: 39.9526, lng: -75.1652 },
+  { name: 'San Antonio', state: 'TX', lat: 29.4241, lng: -98.4936 },
+  { name: 'San Diego', state: 'CA', lat: 32.7157, lng: -117.1611 },
+  { name: 'Dallas', state: 'TX', lat: 32.7767, lng: -96.7970 },
+  { name: 'San Jose', state: 'CA', lat: 37.3382, lng: -121.8863 },
+  { name: 'Austin', state: 'TX', lat: 30.2672, lng: -97.7431 },
+  { name: 'Jacksonville', state: 'FL', lat: 30.3322, lng: -81.6557 },
+  { name: 'Fort Worth', state: 'TX', lat: 32.7555, lng: -97.3308 },
+  { name: 'Columbus', state: 'OH', lat: 39.9612, lng: -82.9988 },
+  { name: 'Charlotte', state: 'NC', lat: 35.2271, lng: -80.8431 },
+  { name: 'San Francisco', state: 'CA', lat: 37.7749, lng: -122.4194 },
+  { name: 'Indianapolis', state: 'IN', lat: 39.7684, lng: -86.1581 },
+  { name: 'Seattle', state: 'WA', lat: 47.6062, lng: -122.3321 },
+  { name: 'Denver', state: 'CO', lat: 39.7392, lng: -104.9903 },
+  { name: 'Boston', state: 'MA', lat: 42.3601, lng: -71.0589 },
+  { name: 'Nashville', state: 'TN', lat: 36.1627, lng: -86.7816 },
+  { name: 'Detroit', state: 'MI', lat: 42.3314, lng: -83.0458 },
+  { name: 'Portland', state: 'OR', lat: 45.5152, lng: -122.6784 },
+  { name: 'Las Vegas', state: 'NV', lat: 36.1699, lng: -115.1398 },
+  { name: 'Miami', state: 'FL', lat: 25.7617, lng: -80.1918 },
+  { name: 'Atlanta', state: 'GA', lat: 33.7490, lng: -84.3880 },
 ];
+
+// Helper function to get coordinates for a city
+function getCityCoords(cityName: string): { lat: number; lng: number } {
+  const city = cities.find(c => c.name === cityName);
+  return city ? { lat: city.lat, lng: city.lng } : { lat: 0, lng: 0 };
+}
 
 const eventCategories = ['Music', 'Sports', 'Theater', 'Comedy', 'Festival'];
 
@@ -572,14 +581,18 @@ export async function seed(dataSource: DataSource) {
   const userRepo = dataSource.getRepository(User);
   const eventRepo = dataSource.getRepository(Event);
   const listingRepo = dataSource.getRepository(Listing);
+  const messageRepo = dataSource.getRepository(Message);
+  const conversationRepo = dataSource.getRepository(Conversation);
 
   /**
    * Clear Existing Seed Data
-   * Deletes all listings, events, and test users (@example.com emails).
+   * Deletes all listings, events, messages, conversations, and test users (@example.com emails).
    * Preserves real user accounts that don't use @example.com domain.
-   * Order matters: delete listings first (foreign key to users/events), then events, then users.
+   * Order matters: delete in reverse dependency order to respect foreign key constraints.
    */
   console.log('  🗑️  Clearing existing data...');
+  await messageRepo.createQueryBuilder().delete().execute();
+  await conversationRepo.createQueryBuilder().delete().execute();
   await listingRepo.createQueryBuilder().delete().execute();
   await eventRepo.createQueryBuilder().delete().execute();
   await userRepo
@@ -606,9 +619,13 @@ export async function seed(dataSource: DataSource) {
   );
   console.log(`  ✅ Created ${users.length} users\n`);
 
-  // Create Events
+  // Create Events (with lat/lng coordinates based on city)
   console.log('  🎫 Seeding events...');
-  const events = await eventRepo.save(mockEvents);
+  const eventsWithCoords = mockEvents.map(event => ({
+    ...event,
+    ...getCityCoords(event.city),
+  }));
+  const events = await eventRepo.save(eventsWithCoords);
   console.log(`  ✅ Created ${events.length} events\n`);
 
   /**

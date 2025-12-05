@@ -43,8 +43,8 @@ export default function CreateListing() {
     const fetchEvents = async () => {
       try {
         setLoading(true);
-        const eventsData = await api.getEvents();
-        setEvents(eventsData);
+        const response = await api.getEvents();
+        setEvents(response.events);
       } catch (error) {
         console.error('Error fetching events:', error);
       } finally {
