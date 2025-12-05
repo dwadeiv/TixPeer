@@ -1,12 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AppDataSource } from './database/data-source';
 import { seed } from './database/seeds/seed';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Security headers (X-Frame-Options, X-Content-Type-Options, etc.)
+  app.use(helmet());
 
   // Enable CORS
   app.enableCors({
@@ -22,6 +27,9 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Global request logging (logs method, URL, response time)
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   // Swagger documentation
   const config = new DocumentBuilder()

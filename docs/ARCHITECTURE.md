@@ -528,9 +528,13 @@ Server → Client Events:
 ### Security Measures
 - Passwords hashed with bcrypt (10 rounds)
 - JWT signed with secret key (HS256 algorithm)
+- JWT_SECRET required in production (fail-fast enforcement)
 - CORS configured (only allows frontend origin)
 - Input validation with class-validator
 - SQL injection prevention (TypeORM parameterized queries)
+- Helmet middleware for HTTP security headers (X-Frame-Options, X-Content-Type-Options, etc.)
+- Rate limiting via ThrottlerModule (100 requests per 60 seconds per IP)
+- Request logging interceptor for performance monitoring
 
 ---
 
