@@ -1,6 +1,6 @@
 # TixPeer Architecture
 
-**Last Updated:** December 4, 2025
+**Last Updated:** December 27, 2025
 
 ## Table of Contents
 - [Overview](#overview)
@@ -533,7 +533,9 @@ Server → Client Events:
 - Input validation with class-validator
 - SQL injection prevention (TypeORM parameterized queries)
 - Helmet middleware for HTTP security headers (X-Frame-Options, X-Content-Type-Options, etc.)
-- Rate limiting via ThrottlerModule (100 requests per 60 seconds per IP)
+- Rate limiting enforced globally via ThrottlerGuard (APP_GUARD pattern):
+  - Default: 100 requests per 60 seconds per IP
+  - Login/Register endpoints: 5 requests per 60 seconds (prevents brute-force attacks)
 - Request logging interceptor for performance monitoring
 
 ---
