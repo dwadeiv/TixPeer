@@ -42,6 +42,8 @@ export class AuthController {
    * Resend verification email
    * POST /auth/resend-verification
    */
+  // Stricter rate limit: 5 requests per 60 seconds (prevents email spam)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('resend-verification')
   @ApiOperation({ summary: 'Resend verification email' })
   async resendVerification(@Body() body: { email: string }) {

@@ -11,6 +11,7 @@ import { DatabaseModule } from './database/database.module';
 import { EventsModule } from './events/events.module';
 import { ListingsModule } from './listings/listings.module';
 import { MessagesModule } from './messages/messages.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { MessagesModule } from './messages/messages.module';
     EventsModule,
     ListingsModule,
     MessagesModule,
+    HealthModule,
   ],
   providers: [
     // Apply rate limiting globally to all endpoints

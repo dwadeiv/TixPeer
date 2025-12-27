@@ -533,9 +533,14 @@ Server → Client Events:
 - Input validation with class-validator
 - SQL injection prevention (TypeORM parameterized queries)
 - Helmet middleware for HTTP security headers (X-Frame-Options, X-Content-Type-Options, etc.)
-- Rate limiting enforced globally via ThrottlerGuard (APP_GUARD pattern):
+- Rate limiting enforced globally via ThrottlerGuard (APP_GUARD pattern in `app.module.ts`):
+  - TTL values are in **milliseconds** (`@nestjs/throttler` v5+)
   - Default: 100 requests per 60 seconds per IP
-  - Login/Register endpoints: 5 requests per 60 seconds (prevents brute-force attacks)
+  - Stricter limits on auth endpoints (5 requests per 60 seconds):
+    - `POST /auth/login` - prevents brute-force attacks
+    - `POST /auth/register` - prevents registration spam
+    - `POST /auth/resend-verification` - prevents email spam
+  - Health endpoint (`GET /health`) exempt via `@SkipThrottle`
 - Request logging interceptor for performance monitoring
 
 ---
