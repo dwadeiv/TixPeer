@@ -1,5 +1,6 @@
 import { Controller, Post, Body, UseGuards, Request, Get, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 
@@ -8,6 +9,8 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  // Stricter rate limit for registration: 5 requests per 60 seconds
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
   async register(
@@ -16,6 +19,8 @@ export class AuthController {
     return this.authService.register(registerDto.email, registerDto.password, registerDto.name);
   }
 
+  // Stricter rate limit for login: 5 requests per 60 seconds (prevents brute-force)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @ApiOperation({ summary: 'Login with email and password' })
@@ -37,6 +42,8 @@ export class AuthController {
    * Resend verification email
    * POST /auth/resend-verification
    */
+  // Stricter rate limit: 5 requests per 60 seconds (prevents email spam)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('resend-verification')
   @ApiOperation({ summary: 'Resend verification email' })
   async resendVerification(@Body() body: { email: string }) {

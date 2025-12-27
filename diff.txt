@@ -1,0 +1,54 @@
+diff --git a/backend/src/app.module.ts b/backend/src/app.module.ts
+index 6517a63..d1b1aa8 100644
+--- a/backend/src/app.module.ts
++++ b/backend/src/app.module.ts
+@@ -11,6 +11,7 @@ import { DatabaseModule } from './database/database.module';
+ import { EventsModule } from './events/events.module';
+ import { ListingsModule } from './listings/listings.module';
+ import { MessagesModule } from './messages/messages.module';
++import { HealthModule } from './health/health.module';
+ 
+ @Module({
+   imports: [
+@@ -45,6 +46,7 @@ import { MessagesModule } from './messages/messages.module';
+     EventsModule,
+     ListingsModule,
+     MessagesModule,
++    HealthModule,
+   ],
+   providers: [
+     // Apply rate limiting globally to all endpoints
+diff --git a/backend/src/auth/auth.controller.ts b/backend/src/auth/auth.controller.ts
+index 8a81b32..37be2b3 100644
+--- a/backend/src/auth/auth.controller.ts
++++ b/backend/src/auth/auth.controller.ts
+@@ -42,6 +42,8 @@ export class AuthController {
+    * Resend verification email
+    * POST /auth/resend-verification
+    */
++  // Stricter rate limit: 5 requests per 60 seconds (prevents email spam)
++  @Throttle({ default: { limit: 5, ttl: 60000 } })
+   @Post('resend-verification')
+   @ApiOperation({ summary: 'Resend verification email' })
+   async resendVerification(@Body() body: { email: string }) {
+diff --git a/docs/ARCHITECTURE.md b/docs/ARCHITECTURE.md
+index 4d36428..2c02151 100644
+--- a/docs/ARCHITECTURE.md
++++ b/docs/ARCHITECTURE.md
+@@ -533,9 +533,14 @@ Server → Client Events:
+ - Input validation with class-validator
+ - SQL injection prevention (TypeORM parameterized queries)
+ - Helmet middleware for HTTP security headers (X-Frame-Options, X-Content-Type-Options, etc.)
+-- Rate limiting enforced globally via ThrottlerGuard (APP_GUARD pattern):
++- Rate limiting enforced globally via ThrottlerGuard (APP_GUARD pattern in `app.module.ts`):
++  - TTL values are in **milliseconds** (`@nestjs/throttler` v5+)
+   - Default: 100 requests per 60 seconds per IP
+-  - Login/Register endpoints: 5 requests per 60 seconds (prevents brute-force attacks)
++  - Stricter limits on auth endpoints (5 requests per 60 seconds):
++    - `POST /auth/login` - prevents brute-force attacks
++    - `POST /auth/register` - prevents registration spam
++    - `POST /auth/resend-verification` - prevents email spam
++  - Health endpoint (`GET /health`) exempt via `@SkipThrottle`
+ - Request logging interceptor for performance monitoring
+ 
+ ---
