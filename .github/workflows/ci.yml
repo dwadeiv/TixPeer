@@ -160,7 +160,8 @@ jobs:
   # Note: Playwright config automatically starts dev servers
   e2e-tests:
     name: E2E Tests (Playwright)
-    runs-on: ubuntu-latest
+    # Pinned: Playwright 1.57 does not support Ubuntu 26.04, which ubuntu-latest moved to on 2026-10-19.
+    runs-on: ubuntu-24.04
 
     services:
       postgres:
