@@ -66,9 +66,7 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
 
 5. **Git Commit and Push Restrictions**
    - NEVER push to the remote repository unless the user explicitly asks
-   - NEVER include co-author attribution (e.g., "Co-Authored-By: Claude") in commit messages
-   - NEVER include "Generated with Claude Code" or similar attribution in commit messages
-   - Commit messages should appear as if written entirely by the user
+   - Credit AI assistance honestly: when Claude Code wrote or substantially shaped a change, end the commit message with a "Co-Authored-By: Claude" trailer
    - When preparing commits, only stage changes and create the commit locally
    - Always let the user review and push manually
 
@@ -199,7 +197,7 @@ TixPeer is a peer-to-peer ticket exchange marketplace that connects fans directl
      - Concise title describing the changes
      - Bulleted list of specific changes grouped by category
      - Technical details where relevant
-   - Do NOT include any Claude attribution, co-author lines, or "Generated with" footers
+   - End the message with a "Co-Authored-By: Claude" trailer when Claude Code wrote or substantially shaped the change
    - Do NOT wait for user to ask - provide commit message proactively at the end of work
    - This streamlines the git workflow and ensures consistent commit history
 
